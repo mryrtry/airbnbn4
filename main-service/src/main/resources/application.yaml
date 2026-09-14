@@ -51,6 +51,13 @@ app:
     access-ttl-ms: 900000
     refresh-ttl-ms: 604800000
 
+  stomp:
+    host: localhost
+    port: 61613
+    username: admin
+    password: admin
+    destination: /queue/notifications.queue
+
 management:
   endpoints:
     web:

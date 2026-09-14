@@ -22,7 +22,6 @@
 
     <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Gw_ListingProvided" />
 
-    <!-- ====== GATEWAY: listingId задан? ====== -->
     <bpmn:exclusiveGateway id="Gw_ListingProvided" name="listingId задан?" default="F_AskListing">
       <bpmn:incoming>F1</bpmn:incoming>
       <bpmn:outgoing>F_ListingProvided</bpmn:outgoing>
@@ -37,14 +36,23 @@
     </bpmn:sequenceFlow>
 
     <bpmn:sequenceFlow id="F_AskListing" name="Нет"
-                       sourceRef="Gw_ListingProvided" targetRef="Task_SelectListingDates" />
+                       sourceRef="Gw_ListingProvided" targetRef="Task_PrepareBookingForm_Select" />
 
-    <!-- ====== USER TASK: выбрать листинг и даты ====== -->
-    <bpmn:userTask id="Task_SelectListingDates" name="Выбрать листинг и даты"
+    <!-- ====== PREPARE FORM (select-listing) ====== -->
+    <bpmn:serviceTask id="Task_PrepareBookingForm_Select" name="Prepare booking form (select)"
+                      camunda:delegateExpression="${prepareBookingFormDelegate}">
+      <bpmn:incoming>F_AskListing</bpmn:incoming>
+      <bpmn:outgoing>F_PrepareSelect</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F_PrepareSelect" sourceRef="Task_PrepareBookingForm_Select"
+                       targetRef="Task_SelectListingDates" />
+
+    <bpmn:userTask id="Task_SelectListingDates" name="Выбор объявления и дат"
                    camunda:candidateUsers="${initiatorUserId}"
                    camunda:formRef="select-listing"
                    camunda:formRefBinding="latest">
-      <bpmn:incoming>F_AskListing</bpmn:incoming>
+      <bpmn:incoming>F_PrepareSelect</bpmn:incoming>
       <bpmn:outgoing>F_AfterSelect</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -175,14 +183,23 @@
       <bpmn:outgoing>F5</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:sequenceFlow id="F5" sourceRef="Task_SendNotifyOwner" targetRef="Task_OwnerDecide" />
+    <!-- ====== PREPARE FORM (owner-decide) ====== -->
+    <bpmn:sequenceFlow id="F5" sourceRef="Task_SendNotifyOwner" targetRef="Task_PrepareBookingForm_Owner" />
+
+    <bpmn:serviceTask id="Task_PrepareBookingForm_Owner" name="Prepare booking form (owner)"
+                      camunda:delegateExpression="${prepareBookingFormDelegate}">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:outgoing>F5b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F5b" sourceRef="Task_PrepareBookingForm_Owner" targetRef="Task_OwnerDecide" />
 
     <!-- ====== OWNER DECIDE ====== -->
-    <bpmn:userTask id="Task_OwnerDecide" name="Owner decide"
+    <bpmn:userTask id="Task_OwnerDecide" name="Решение владельца"
                    camunda:candidateUsers="${ownerId}"
                    camunda:formRef="owner-decide"
                    camunda:formRefBinding="latest">
-      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:incoming>F5b</bpmn:incoming>
       <bpmn:outgoing>F6</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -266,14 +283,23 @@
       <bpmn:outgoing>F13</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:sequenceFlow id="F13" sourceRef="Task_SendNotifyApproved" targetRef="Task_CheckIn" />
+    <!-- ====== PREPARE FORM (check-in) ====== -->
+    <bpmn:sequenceFlow id="F13" sourceRef="Task_SendNotifyApproved" targetRef="Task_PrepareBookingForm_CheckIn" />
+
+    <bpmn:serviceTask id="Task_PrepareBookingForm_CheckIn" name="Prepare booking form (check-in)"
+                      camunda:delegateExpression="${prepareBookingFormDelegate}">
+      <bpmn:incoming>F13</bpmn:incoming>
+      <bpmn:outgoing>F13b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F13b" sourceRef="Task_PrepareBookingForm_CheckIn" targetRef="Task_CheckIn" />
 
     <!-- ====== CHECK-IN ====== -->
-    <bpmn:userTask id="Task_CheckIn" name="Check-in"
+    <bpmn:userTask id="Task_CheckIn" name="Подтверждение заезда"
                    camunda:candidateUsers="${guestId}"
                    camunda:formRef="check-in"
                    camunda:formRefBinding="latest">
-      <bpmn:incoming>F13</bpmn:incoming>
+      <bpmn:incoming>F13b</bpmn:incoming>
       <bpmn:outgoing>F14</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -329,14 +355,23 @@
       <bpmn:outgoing>F16</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:sequenceFlow id="F16" sourceRef="Task_SendNotifyCheckInOwner" targetRef="Task_CheckOut" />
+    <!-- ====== PREPARE FORM (check-out) ====== -->
+    <bpmn:sequenceFlow id="F16" sourceRef="Task_SendNotifyCheckInOwner" targetRef="Task_PrepareBookingForm_CheckOut" />
+
+    <bpmn:serviceTask id="Task_PrepareBookingForm_CheckOut" name="Prepare booking form (check-out)"
+                      camunda:delegateExpression="${prepareBookingFormDelegate}">
+      <bpmn:incoming>F16</bpmn:incoming>
+      <bpmn:outgoing>F16b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F16b" sourceRef="Task_PrepareBookingForm_CheckOut" targetRef="Task_CheckOut" />
 
     <!-- ====== CHECK-OUT ====== -->
-    <bpmn:userTask id="Task_CheckOut" name="Check-out"
+    <bpmn:userTask id="Task_CheckOut" name="Подтверждение выезда"
                    camunda:candidateUsers="${guestId}"
                    camunda:formRef="check-out"
                    camunda:formRefBinding="latest">
-      <bpmn:incoming>F16</bpmn:incoming>
+      <bpmn:incoming>F16b</bpmn:incoming>
       <bpmn:outgoing>F17</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -357,7 +392,6 @@
       <bpmn:outgoing>F18a</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <!-- NOTIFY GUEST (check-out) -->
     <bpmn:sequenceFlow id="F18a" sourceRef="Task_StartResolution" targetRef="Task_PrepareNotifyCheckOutGuest" />
 
     <bpmn:serviceTask id="Task_PrepareNotifyCheckOutGuest" name="Prepare check-out notification (guest)"
@@ -380,7 +414,6 @@
       <bpmn:outgoing>F18c</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <!-- NOTIFY OWNER (check-out) -->
     <bpmn:sequenceFlow id="F18c" sourceRef="Task_SendNotifyCheckOutGuest" targetRef="Task_PrepareNotifyCheckOutOwner" />
 
     <bpmn:serviceTask id="Task_PrepareNotifyCheckOutOwner" name="Prepare check-out notification (owner)"

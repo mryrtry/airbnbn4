@@ -1,5 +1,6 @@
 package main.delegate;
 
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -17,8 +18,7 @@ public class CloseResolutionWindowExpiredDelegate implements JavaDelegate {
     public void execute(DelegateExecution execution) {
         execution.setVariable("windowStatus", "EXPIRED");
         execution.setVariable("windowClosedAt", Instant.now().toString());
-
         log.info("[RESOLUTION] Window expired (no complaint filed) for bookingId={}",
-                execution.getVariable("bookingId"));
+                CamundaVars.getString(execution, "bookingId"));
     }
 }

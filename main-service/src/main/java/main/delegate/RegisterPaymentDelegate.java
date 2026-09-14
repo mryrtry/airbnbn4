@@ -1,5 +1,6 @@
 package main.delegate;
 
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -15,11 +16,12 @@ public class RegisterPaymentDelegate implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) {
+        Instant now = Instant.now();
         execution.setVariable("complaintStatus", "PAID");
         execution.setVariable("windowStatus", "CLOSED");
-        execution.setVariable("windowClosedAt", Instant.now().toString());
-        execution.setVariable("paidAt", Instant.now().toString());
+        execution.setVariable("windowClosedAt", now.toString());
+        execution.setVariable("paidAt", now.toString());
         log.info("[RESOLUTION] Guest PAID compensation for bookingId={}",
-                execution.getVariable("bookingId"));
+                CamundaVars.getString(execution, "bookingId"));
     }
 }

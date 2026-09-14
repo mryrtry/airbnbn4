@@ -3,9 +3,42 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "Подтверждаю выезд",
+      "type": "text",
+      "label": "Подтверждение выезда",
+      "id": "InfoHeader",
+      "text": "Подтвердите выезд по бронированию."
+    },
+    {
+      "type": "textfield",
+      "label": "Номер брони",
+      "id": "InfoBookingId",
+      "key": "formBookingId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Объявление",
+      "id": "InfoListingTitle",
+      "key": "formListingTitle",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Адрес",
+      "id": "InfoListingAddress",
+      "key": "formListingAddress",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Даты",
+      "id": "InfoDates",
+      "key": "formBookingDates",
+      "readonly": true
+    },
+    {
       "type": "checkbox",
-      "layout": { "row": "Row_1", "columns": null },
+      "label": "Подтверждаю выезд",
       "id": "Field_confirm",
       "key": "checkOutConfirm",
       "validate": { "required": true }

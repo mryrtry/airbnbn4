@@ -7,12 +7,15 @@ import org.camunda.bpm.engine.IdentityService;
 import org.camunda.bpm.engine.identity.Group;
 import org.camunda.bpm.engine.identity.User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-
 @Service
 public class CamundaUserService {
+
+    private static final String ROLE_USER = "USER";
+    private static final String ROLE_OWNER = "OWNER";
 
     private final IdentityService identityService;
 
@@ -20,8 +23,9 @@ public class CamundaUserService {
         this.identityService = identityService;
     }
 
-    public UserInfo register(String username, String password, String email, String firstName, String lastName) {
-
+    @Transactional
+    public UserInfo register(String username, String password, String email,
+                             String firstName, String lastName) {
         if (exists(username)) {
             throw new UserAlreadyExistsException("User already exists: " + username);
         }
@@ -33,7 +37,7 @@ public class CamundaUserService {
         user.setLastName(lastName);
         identityService.saveUser(user);
 
-        identityService.createMembership(username, "USER");
+        identityService.createMembership(username, ROLE_USER);
 
         return getInfo(username);
     }
@@ -47,7 +51,12 @@ public class CamundaUserService {
     }
 
     public List<String> getGroups(String username) {
-        return identityService.createGroupQuery().groupMember(username).list().stream().map(Group::getId).toList();
+        return identityService.createGroupQuery()
+                .groupMember(username)
+                .list()
+                .stream()
+                .map(Group::getId)
+                .toList();
     }
 
     public UserInfo getInfo(String username) {
@@ -55,9 +64,15 @@ public class CamundaUserService {
         if (user == null) {
             throw new EntityNotFoundException("User not found: " + username);
         }
-        return new UserInfo(user.getId(), user.getEmail(), user.getFirstName(), user.getLastName(), getGroups(username));
+        return new UserInfo(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                getGroups(username));
     }
 
+    @Transactional
     public UserInfo becomeOwner(String username) {
         if (!exists(username)) {
             throw new EntityNotFoundException("User not found: " + username);
@@ -65,14 +80,12 @@ public class CamundaUserService {
 
         long count = identityService.createUserQuery()
                 .userId(username)
-                .memberOfGroup("OWNER")
+                .memberOfGroup(ROLE_OWNER)
                 .count();
-
         if (count == 0) {
-            identityService.createMembership(username, "OWNER");
+            identityService.createMembership(username, ROLE_OWNER);
         }
 
         return getInfo(username);
     }
-
 }

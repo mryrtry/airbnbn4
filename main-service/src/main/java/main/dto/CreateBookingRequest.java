@@ -1,10 +1,12 @@
 package main.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 
 public record CreateBookingRequest(
-        Long listingId,
-        LocalDate bookingStart,
-        LocalDate bookingEnd
+        @NotNull Long listingId,
+        @NotNull LocalDate bookingStart,
+        @NotNull LocalDate bookingEnd
 ) {
 }

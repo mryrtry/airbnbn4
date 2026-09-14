@@ -1,5 +1,6 @@
 package main.delegate;
 
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ public class ApproveComplaintDelegate implements JavaDelegate {
     public void execute(DelegateExecution execution) {
         execution.setVariable("complaintStatus", "APPROVED");
         log.info("[RESOLUTION] Complaint APPROVED for bookingId={}, adminComment={}",
-                execution.getVariable("bookingId"), execution.getVariable("adminComment"));
+                CamundaVars.getString(execution, "bookingId"),
+                CamundaVars.getString(execution, "adminComment"));
     }
 }

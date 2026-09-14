@@ -3,9 +3,49 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "Решение",
+      "type": "text",
+      "label": "Информация о бронировании",
+      "id": "InfoHeader",
+      "text": "Проверьте данные заявки и примите решение."
+    },
+    {
+      "type": "textfield",
+      "label": "Номер брони",
+      "id": "InfoBookingId",
+      "key": "formBookingId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Объявление",
+      "id": "InfoListingTitle",
+      "key": "formListingTitle",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Адрес",
+      "id": "InfoListingAddress",
+      "key": "formListingAddress",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Гость",
+      "id": "InfoGuestId",
+      "key": "formGuestId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Даты",
+      "id": "InfoDates",
+      "key": "formBookingDates",
+      "readonly": true
+    },
+    {
       "type": "select",
-      "layout": { "row": "Row_1", "columns": null },
+      "label": "Решение",
       "id": "Field_decision",
       "key": "ownerDecision",
       "values": [
@@ -15,11 +55,11 @@
       "validate": { "required": true }
     },
     {
-      "label": "Комментарий",
       "type": "textarea",
-      "layout": { "row": "Row_2", "columns": null },
+      "label": "Комментарий",
       "id": "Field_comment",
-      "key": "ownerComment"
+      "key": "ownerComment",
+      "validate": { "maxLength": 1000 }
     }
   ],
   "type": "default"

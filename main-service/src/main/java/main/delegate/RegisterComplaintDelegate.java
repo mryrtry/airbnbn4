@@ -1,5 +1,7 @@
 package main.delegate;
 
+import main.exception.ValidationException;
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -15,13 +17,13 @@ public class RegisterComplaintDelegate implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) {
-        String reason = (String) execution.getVariable("reason");
+        String reason = CamundaVars.getString(execution, "reason");
         if (reason == null || reason.isBlank()) {
-            throw new IllegalStateException("Complaint reason is required");
+            throw new ValidationException("Complaint reason is required");
         }
         execution.setVariable("complaintStatus", "PENDING");
         execution.setVariable("complaintFiledAt", Instant.now().toString());
         log.info("[RESOLUTION] Complaint filed for bookingId={}, reason='{}'",
-                execution.getVariable("bookingId"), reason);
+                CamundaVars.getString(execution, "bookingId"), reason);
     }
 }

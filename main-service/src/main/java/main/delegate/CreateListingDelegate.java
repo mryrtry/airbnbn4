@@ -1,89 +1,58 @@
 package main.delegate;
 
-import main.entity.Listing;
-import main.entity.ListingStatus;
-import main.repository.ListingRepository;
+import main.exception.ValidationException;
+import main.service.ListingLifecycleService;
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Optional;
 
 @Component("createListingDelegate")
 public class CreateListingDelegate implements JavaDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(CreateListingDelegate.class);
 
-    private final ListingRepository listingRepository;
+    private final ListingLifecycleService listingLifecycleService;
 
-    public CreateListingDelegate(ListingRepository listingRepository) {
-        this.listingRepository = listingRepository;
+    public CreateListingDelegate(ListingLifecycleService listingLifecycleService) {
+        this.listingLifecycleService = listingLifecycleService;
     }
 
     @Override
-    @Transactional
     public void execute(DelegateExecution execution) {
-        String processInstanceId = execution.getProcessInstanceId();
-
-        // Идемпотентность
-        Optional<Listing> existing = listingRepository.findByProcessInstanceId(processInstanceId);
-        if (existing.isPresent()) {
-            log.warn("Listing already exists for process {}", processInstanceId);
-            execution.setVariable("listingId", existing.get().getId());
-            execution.removeVariable("createError");
-            return;
-        }
+        execution.removeVariable("createError");
 
         try {
-            String title = (String) execution.getVariable("title");
-            String address = (String) execution.getVariable("address");
-            String description = (String) execution.getVariable("description");
-            Object priceObj = execution.getVariable("price");
-            String ownerId = (String) execution.getVariable("initiatorUserId");
+            Long listingId = listingLifecycleService.create(
+                    execution.getProcessInstanceId(),
+                    CamundaVars.getString(execution, "initiatorUserId"),
+                    CamundaVars.getString(execution, "title"),
+                    CamundaVars.getString(execution, "address"),
+                    CamundaVars.getString(execution, "description"),
+                    toBigDecimal(execution.getVariable("price"))
+            );
+            execution.setVariable("listingId", listingId);
 
-            if (isBlank(title)) throw new IllegalArgumentException("title is required");
-            if (isBlank(address)) throw new IllegalArgumentException("address is required");
-            if (priceObj == null) throw new IllegalArgumentException("price is required");
-            if (isBlank(ownerId)) throw new IllegalArgumentException("initiatorUserId is required");
-
-            BigDecimal price = parsePrice(priceObj);
-            if (price.signum() < 0) throw new IllegalArgumentException("price must be non-negative");
-
-            Listing listing = new Listing();
-            listing.setTitle(title);
-            listing.setAddress(address);
-            listing.setDescription(description);
-            listing.setPrice(price);
-            listing.setStatus(ListingStatus.AVAILABLE);
-            listing.setOwnerId(ownerId);
-            listing.setProcessInstanceId(processInstanceId);
-            listing.setCreatedAt(Instant.now());
-
-            Listing saved = listingRepository.save(listing);
-            execution.setVariable("listingId", saved.getId());
-            execution.removeVariable("createError");
-
-            log.info("Listing created: id={}, title='{}', owner={}", saved.getId(), title, ownerId);
-
-        } catch (Exception e) {
-            log.error("Failed to create listing", e);
-            execution.setVariable("createError",
-                    e.getMessage() != null ? e.getMessage() : "Unknown error");
+        } catch (ValidationException ex) {
+            log.warn("Listing creation validation failed: {}", ex.getMessage());
+            execution.setVariable("createError", ex.getMessage());
         }
     }
 
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    private BigDecimal parsePrice(Object priceObj) {
-        if (priceObj instanceof BigDecimal bd) return bd;
-        if (priceObj instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
-        return new BigDecimal(priceObj.toString());
+    private BigDecimal toBigDecimal(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof BigDecimal bd) {
+            return bd;
+        }
+        if (value instanceof Number n) {
+            return BigDecimal.valueOf(n.doubleValue());
+        }
+        return new BigDecimal(value.toString());
     }
 }

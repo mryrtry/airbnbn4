@@ -1,6 +1,7 @@
 package main.delegate;
 
-import main.service.BookingService;
+import main.service.BookingLifecycleService;
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -12,24 +13,18 @@ public class RejectBookingDelegate implements JavaDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(RejectBookingDelegate.class);
 
-    private final BookingService bookingService;
+    private final BookingLifecycleService lifecycleService;
 
-    public RejectBookingDelegate(BookingService bookingService) {
-        this.bookingService = bookingService;
+    public RejectBookingDelegate(BookingLifecycleService lifecycleService) {
+        this.lifecycleService = lifecycleService;
     }
 
     @Override
     public void execute(DelegateExecution execution) {
-        Long bookingId = toLong(execution.getVariable("bookingId"));
-        String comment = (String) execution.getVariable("ownerComment");
+        Long bookingId = CamundaVars.getLong(execution, "bookingId");
+        String comment = CamundaVars.getString(execution, "ownerComment");
 
-        bookingService.rejectBooking(bookingId, comment);
+        lifecycleService.reject(bookingId, comment);
         log.info("Booking {} rejected", bookingId);
-    }
-
-    private Long toLong(Object v) {
-        if (v == null) return null;
-        if (v instanceof Number n) return n.longValue();
-        try { return Long.parseLong(v.toString()); } catch (Exception e) { return null; }
     }
 }

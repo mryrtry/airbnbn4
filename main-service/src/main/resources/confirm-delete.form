@@ -3,16 +3,42 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "Подтвердите удаление",
       "type": "text",
-      "layout": { "row": "Row_1", "columns": null },
-      "id": "Field_text",
-      "text": "Вы уверены, что хотите удалить это объявление?"
+      "label": "Подтверждение удаления",
+      "id": "InfoHeader",
+      "text": "Вы уверены, что хотите удалить это объявление? Действие необратимо."
     },
     {
-      "label": "Подтверждаю",
+      "type": "textfield",
+      "label": "ID объявления",
+      "id": "InfoListingId",
+      "key": "formListingId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Название",
+      "id": "InfoListingTitle",
+      "key": "formListingTitle",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Адрес",
+      "id": "InfoListingAddress",
+      "key": "formListingAddress",
+      "readonly": true
+    },
+    {
+      "type": "number",
+      "label": "Цена",
+      "id": "InfoListingPrice",
+      "key": "formListingPrice",
+      "readonly": true
+    },
+    {
       "type": "checkbox",
-      "layout": { "row": "Row_2", "columns": null },
+      "label": "Подтверждаю удаление",
       "id": "Field_confirm",
       "key": "confirmDelete",
       "validate": { "required": true }

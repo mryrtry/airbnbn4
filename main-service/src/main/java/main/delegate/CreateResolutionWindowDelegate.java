@@ -1,5 +1,6 @@
 package main.delegate;
 
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -11,10 +12,8 @@ import java.time.Instant;
 @Component("createResolutionWindowDelegate")
 public class CreateResolutionWindowDelegate implements JavaDelegate {
 
-    private static final Logger log = LoggerFactory.getLogger(CreateResolutionWindowDelegate.class);
-
-    /** Окно живёт столько же, сколько timer в BPMN (PT1M). */
     public static final long WINDOW_DURATION_SECONDS = 60L;
+    private static final Logger log = LoggerFactory.getLogger(CreateResolutionWindowDelegate.class);
 
     @Override
     public void execute(DelegateExecution execution) {
@@ -25,6 +24,6 @@ public class CreateResolutionWindowDelegate implements JavaDelegate {
         execution.setVariable("windowDeadline", deadline.toString());
 
         log.info("[RESOLUTION] Window opened for bookingId={}, deadline={}",
-                execution.getVariable("bookingId"), deadline);
+                CamundaVars.getString(execution, "bookingId"), deadline);
     }
 }

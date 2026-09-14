@@ -3,9 +3,63 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "Решение",
+      "type": "text",
+      "label": "Рассмотрение жалобы",
+      "id": "InfoHeader",
+      "text": "Ознакомьтесь с деталями жалобы и примите решение."
+    },
+    {
+      "type": "textfield",
+      "label": "Номер брони",
+      "id": "InfoBookingId",
+      "key": "formBookingId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Объявление",
+      "id": "InfoListingTitle",
+      "key": "formListingTitle",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Владелец",
+      "id": "InfoOwnerId",
+      "key": "formOwnerId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Гость",
+      "id": "InfoGuestId",
+      "key": "formGuestId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Даты",
+      "id": "InfoDates",
+      "key": "formBookingDates",
+      "readonly": true
+    },
+    {
+      "type": "textarea",
+      "label": "Причина жалобы",
+      "id": "InfoReason",
+      "key": "formReason",
+      "readonly": true
+    },
+    {
+      "type": "textarea",
+      "label": "Комментарий владельца",
+      "id": "InfoOwnerComment",
+      "key": "formOwnerComment",
+      "readonly": true
+    },
+    {
       "type": "select",
-      "layout": { "row": "Row_1", "columns": null },
+      "label": "Решение",
       "id": "Field_decision",
       "key": "adminDecision",
       "values": [
@@ -15,11 +69,11 @@
       "validate": { "required": true }
     },
     {
-      "label": "Комментарий",
       "type": "textarea",
-      "layout": { "row": "Row_2", "columns": null },
+      "label": "Комментарий",
       "id": "Field_comment",
-      "key": "adminComment"
+      "key": "adminComment",
+      "validate": { "maxLength": 1000 }
     }
   ],
   "type": "default"

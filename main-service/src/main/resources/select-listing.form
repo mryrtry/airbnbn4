@@ -3,28 +3,45 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "ID листинга",
+      "type": "text",
+      "label": "Информация",
+      "id": "InfoHeader",
+      "text": "Выберите объявление и укажите даты бронирования. Даты — в формате YYYY-MM-DD."
+    },
+    {
+      "type": "textarea",
+      "label": "Доступные объявления",
+      "id": "InfoAvailableListings",
+      "key": "formAvailableListings",
+      "readonly": true,
+      "layout": { "row": "Row_Info1", "columns": null }
+    },
+    {
       "type": "number",
-      "layout": { "row": "Row_1", "columns": null },
+      "label": "ID объявления",
       "id": "Field_listingId",
       "key": "listingId",
-      "validate": { "required": true, "min": 1 }
+      "validate": { "required": true, "min": 1, "max": 999999 }
     },
     {
-      "label": "Дата заезда (YYYY-MM-DD)",
       "type": "textfield",
-      "layout": { "row": "Row_2", "columns": null },
+      "label": "Дата заезда (YYYY-MM-DD)",
       "id": "Field_start",
       "key": "bookingStart",
-      "validate": { "required": false }
+      "validate": {
+        "required": false,
+        "pattern": "^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+      }
     },
     {
-      "label": "Дата выезда (YYYY-MM-DD)",
       "type": "textfield",
-      "layout": { "row": "Row_3", "columns": null },
+      "label": "Дата выезда (YYYY-MM-DD)",
       "id": "Field_end",
       "key": "bookingEnd",
-      "validate": { "required": false }
+      "validate": {
+        "required": false,
+        "pattern": "^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+      }
     }
   ],
   "type": "default"

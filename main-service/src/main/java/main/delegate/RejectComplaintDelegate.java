@@ -1,5 +1,6 @@
 package main.delegate;
 
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ public class RejectComplaintDelegate implements JavaDelegate {
         execution.setVariable("windowStatus", "CLOSED");
         execution.setVariable("windowClosedAt", Instant.now().toString());
         log.info("[RESOLUTION] Complaint REJECTED for bookingId={}, adminComment={}",
-                execution.getVariable("bookingId"), execution.getVariable("adminComment"));
+                CamundaVars.getString(execution, "bookingId"),
+                CamundaVars.getString(execution, "adminComment"));
     }
 }

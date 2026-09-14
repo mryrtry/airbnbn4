@@ -1,9 +1,7 @@
 package main.controller;
 
-import main.dto.AuthResponse;
-import main.dto.LoginRequest;
-import main.dto.RegisterRequest;
-import main.dto.UserInfo;
+import jakarta.validation.Valid;
+import main.dto.*;
 import main.security.JwtService;
 import main.security.TokenBlacklistService;
 import main.service.CamundaUserService;
@@ -33,33 +31,26 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserInfo> register(@RequestBody RegisterRequest req) {
+    public ResponseEntity<UserInfo> register(@Valid @RequestBody RegisterRequest req) {
         return ResponseEntity.ok(userService.register(
-                req.username(), req.password(), req.email(), req.firstName(), req.lastName()));
+                req.username(), req.password(), req.email(),
+                req.firstName(), req.lastName()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
         if (!userService.checkPassword(req.username(), req.password())) {
             throw new IllegalArgumentException("Invalid username or password");
         }
         List<String> groups = userService.getGroups(req.username());
-        return ResponseEntity.ok(new AuthResponse(
-                jwtService.generateAccessToken(req.username(), groups),
-                jwtService.generateRefreshToken(req.username(), groups),
-                jwtService.getAccessTtlMs()
-        ));
+        return ResponseEntity.ok(buildAuthResponse(req.username(), groups));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestParam String refreshToken) {
-        String username = jwtService.extractUsername(refreshToken);
-        List<String> groups = jwtService.extractGroups(refreshToken);
-        return ResponseEntity.ok(new AuthResponse(
-                jwtService.generateAccessToken(username, groups),
-                jwtService.generateRefreshToken(username, groups),
-                jwtService.getAccessTtlMs()
-        ));
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
+        String username = jwtService.extractUsername(req.refreshToken());
+        List<String> groups = jwtService.extractGroups(req.refreshToken());
+        return ResponseEntity.ok(buildAuthResponse(username, groups));
     }
 
     @PostMapping("/logout")
@@ -83,5 +74,13 @@ public class AuthController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserInfo> becomeOwner(Authentication auth) {
         return ResponseEntity.ok(userService.becomeOwner(auth.getName()));
+    }
+
+    private AuthResponse buildAuthResponse(String username, List<String> groups) {
+        return new AuthResponse(
+                jwtService.generateAccessToken(username, groups),
+                jwtService.generateRefreshToken(username, groups),
+                jwtService.getAccessTtlMs()
+        );
     }
 }

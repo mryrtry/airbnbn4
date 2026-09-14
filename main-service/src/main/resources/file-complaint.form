@@ -3,19 +3,52 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "Причина жалобы",
-      "type": "textarea",
-      "layout": { "row": "Row_1", "columns": null },
-      "id": "Field_reason",
-      "key": "reason",
-      "validate": { "required": true }
+      "type": "text",
+      "label": "Подача жалобы",
+      "id": "InfoHeader",
+      "text": "Опишите причину жалобы по бронированию. Окно подачи ограничено по времени."
     },
     {
-      "label": "Комментарий",
+      "type": "textfield",
+      "label": "Номер брони",
+      "id": "InfoBookingId",
+      "key": "formBookingId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Объявление",
+      "id": "InfoListingTitle",
+      "key": "formListingTitle",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Гость",
+      "id": "InfoGuestId",
+      "key": "formGuestId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Даты",
+      "id": "InfoDates",
+      "key": "formBookingDates",
+      "readonly": true
+    },
+    {
       "type": "textarea",
-      "layout": { "row": "Row_2", "columns": null },
+      "label": "Причина жалобы",
+      "id": "Field_reason",
+      "key": "reason",
+      "validate": { "required": true, "minLength": 5, "maxLength": 2000 }
+    },
+    {
+      "type": "textarea",
+      "label": "Комментарий",
       "id": "Field_comment",
-      "key": "ownerComment"
+      "key": "ownerComment",
+      "validate": { "maxLength": 1000 }
     }
   ],
   "type": "default"

@@ -22,7 +22,6 @@
 
     <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Gw_ListingIdProvided" />
 
-    <!-- Gateway: listingId задан? -->
     <bpmn:exclusiveGateway id="Gw_ListingIdProvided" name="listingId задан?" default="F_AskListing">
       <bpmn:incoming>F1</bpmn:incoming>
       <bpmn:outgoing>F_ListingIdProvided</bpmn:outgoing>
@@ -37,14 +36,22 @@
     </bpmn:sequenceFlow>
 
     <bpmn:sequenceFlow id="F_AskListing" name="Нет"
-                       sourceRef="Gw_ListingIdProvided" targetRef="Task_SelectListing" />
+                       sourceRef="Gw_ListingIdProvided" targetRef="Task_PrepareListingForm_Select" />
 
-    <!-- User task: выбор листинга (только если listingId не задан) -->
-    <bpmn:userTask id="Task_SelectListing" name="Выбрать листинг"
+    <bpmn:serviceTask id="Task_PrepareListingForm_Select" name="Prepare listing form (select)"
+                      camunda:delegateExpression="${prepareListingFormDelegate}">
+      <bpmn:incoming>F_AskListing</bpmn:incoming>
+      <bpmn:outgoing>F_AskListing_b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F_AskListing_b" sourceRef="Task_PrepareListingForm_Select"
+                       targetRef="Task_SelectListing" />
+
+    <bpmn:userTask id="Task_SelectListing" name="Выбор объявления"
                    camunda:candidateGroups="OWNER"
                    camunda:formRef="select-listing"
                    camunda:formRefBinding="latest">
-      <bpmn:incoming>F_AskListing</bpmn:incoming>
+      <bpmn:incoming>F_AskListing_b</bpmn:incoming>
       <bpmn:outgoing>F2_AfterSelect</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -106,13 +113,21 @@
       <bpmn:outgoing>F3</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:sequenceFlow id="F3" sourceRef="Task_LoadForEdit" targetRef="Task_EditForm" />
+    <bpmn:sequenceFlow id="F3" sourceRef="Task_LoadForEdit" targetRef="Task_PrepareListingForm_Edit" />
 
-    <bpmn:userTask id="Task_EditForm" name="Edit listing form"
+    <bpmn:serviceTask id="Task_PrepareListingForm_Edit" name="Prepare listing form (edit)"
+                      camunda:delegateExpression="${prepareListingFormDelegate}">
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:outgoing>F3b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F3b" sourceRef="Task_PrepareListingForm_Edit" targetRef="Task_EditForm" />
+
+    <bpmn:userTask id="Task_EditForm" name="Редактирование объявления"
                    camunda:candidateUsers="${initiatorUserId}"
                    camunda:formRef="edit-listing"
                    camunda:formRefBinding="latest">
-      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:incoming>F3b</bpmn:incoming>
       <bpmn:outgoing>F4</bpmn:outgoing>
     </bpmn:userTask>
 

@@ -16,10 +16,6 @@
       </input>
       <output id="Output_1" label="permission" name="permission" typeRef="string"/>
 
-      <rule id="Rule_U1">
-        <inputEntry><text>"USER"</text></inputEntry>
-        <outputEntry><text>"HELLO_RUN"</text></outputEntry>
-      </rule>
       <rule id="Rule_U2">
         <inputEntry><text>"USER"</text></inputEntry>
         <outputEntry><text>"LISTING_READ"</text></outputEntry>
@@ -57,10 +53,6 @@
         <outputEntry><text>"NOTIFICATION_READ"</text></outputEntry>
       </rule>
 
-      <rule id="Rule_O1">
-        <inputEntry><text>"OWNER"</text></inputEntry>
-        <outputEntry><text>"HELLO_RUN"</text></outputEntry>
-      </rule>
       <rule id="Rule_O2">
         <inputEntry><text>"OWNER"</text></inputEntry>
         <outputEntry><text>"LISTING_READ"</text></outputEntry>
@@ -110,10 +102,6 @@
         <outputEntry><text>"NOTIFICATION_READ"</text></outputEntry>
       </rule>
 
-      <rule id="Rule_A1">
-        <inputEntry><text>"ADMIN"</text></inputEntry>
-        <outputEntry><text>"HELLO_RUN"</text></outputEntry>
-      </rule>
       <rule id="Rule_A2">
         <inputEntry><text>"ADMIN"</text></inputEntry>
         <outputEntry><text>"LISTING_READ"</text></outputEntry>

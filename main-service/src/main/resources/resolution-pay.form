@@ -3,9 +3,49 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "Решение",
+      "type": "text",
+      "label": "Оплата компенсации",
+      "id": "InfoHeader",
+      "text": "Жалоба одобрена администратором. Оплатите компенсацию или откажитесь. Отказ ведёт к блокировке аккаунта."
+    },
+    {
+      "type": "textfield",
+      "label": "Номер брони",
+      "id": "InfoBookingId",
+      "key": "formBookingId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Объявление",
+      "id": "InfoListingTitle",
+      "key": "formListingTitle",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Даты",
+      "id": "InfoDates",
+      "key": "formBookingDates",
+      "readonly": true
+    },
+    {
+      "type": "textarea",
+      "label": "Причина жалобы",
+      "id": "InfoReason",
+      "key": "formReason",
+      "readonly": true
+    },
+    {
+      "type": "textarea",
+      "label": "Комментарий администратора",
+      "id": "InfoAdminComment",
+      "key": "formAdminComment",
+      "readonly": true
+    },
+    {
       "type": "select",
-      "layout": { "row": "Row_1", "columns": null },
+      "label": "Решение",
       "id": "Field_decision",
       "key": "userDecision",
       "values": [

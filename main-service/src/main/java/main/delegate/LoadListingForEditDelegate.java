@@ -1,7 +1,9 @@
 package main.delegate;
 
 import main.entity.Listing;
+import main.exception.EntityNotFoundException;
 import main.repository.ListingRepository;
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -21,13 +23,13 @@ public class LoadListingForEditDelegate implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) {
-        Long listingId = toLong(execution.getVariable("listingId"));
+        Long listingId = CamundaVars.getLong(execution, "listingId");
         if (listingId == null) {
-            throw new IllegalStateException("listingId is null");
+            throw new EntityNotFoundException("listingId is null");
         }
 
         Listing listing = listingRepository.findById(listingId)
-                .orElseThrow(() -> new IllegalStateException("Listing not found: " + listingId));
+                .orElseThrow(() -> new EntityNotFoundException("Listing not found: " + listingId));
 
         execution.setVariable("title", listing.getTitle());
         execution.setVariable("address", listing.getAddress());
@@ -35,15 +37,5 @@ public class LoadListingForEditDelegate implements JavaDelegate {
         execution.setVariable("price", listing.getPrice().doubleValue());
 
         log.info("Loaded listing {} for edit", listingId);
-    }
-
-    private Long toLong(Object value) {
-        if (value == null) return null;
-        if (value instanceof Number n) return n.longValue();
-        try {
-            return Long.parseLong(value.toString());
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 }

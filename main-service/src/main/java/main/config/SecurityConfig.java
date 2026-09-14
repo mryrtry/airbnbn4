@@ -34,11 +34,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/ping").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers("/camunda/**").permitAll()
-                        .requestMatchers("/engine-rest/**").permitAll()
                         .requestMatchers("/forms/**").permitAll()
                         .requestMatchers("/lib/**", "/app/**", "/assets/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/", "/*.html").permitAll()
+                        .requestMatchers("/engine-rest/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

@@ -25,8 +25,8 @@ public class ListingProcessService {
         Map<String, Object> vars = new HashMap<>();
         vars.put("initiatorUserId", userId);
 
-        ProcessInstance instance = runtimeService.startProcessInstanceByKey(PROCESS_CREATE, vars);
-        return new ProcessStartResult(instance.getId(), "CREATE", null, "started");
+        ProcessInstance pi = runtimeService.startProcessInstanceByKey(PROCESS_CREATE, vars);
+        return new ProcessStartResult(pi.getId(), "CREATE", null, "started");
     }
 
     public ProcessStartResult startUpdate(String userId, Long listingId) {
@@ -34,9 +34,9 @@ public class ListingProcessService {
         vars.put("initiatorUserId", userId);
         vars.put("listingId", listingId);
 
-        ProcessInstance instance = runtimeService.startProcessInstanceByKey(
+        ProcessInstance pi = runtimeService.startProcessInstanceByKey(
                 PROCESS_UPDATE, "listing-" + listingId, vars);
-        return new ProcessStartResult(instance.getId(), "UPDATE", listingId, "started");
+        return new ProcessStartResult(pi.getId(), "UPDATE", listingId, "started");
     }
 
     public ProcessStartResult startDelete(String userId, Long listingId) {
@@ -44,8 +44,8 @@ public class ListingProcessService {
         vars.put("initiatorUserId", userId);
         vars.put("listingId", listingId);
 
-        ProcessInstance instance = runtimeService.startProcessInstanceByKey(
+        ProcessInstance pi = runtimeService.startProcessInstanceByKey(
                 PROCESS_DELETE, "listing-" + listingId, vars);
-        return new ProcessStartResult(instance.getId(), "DELETE", listingId, "started");
+        return new ProcessStartResult(pi.getId(), "DELETE", listingId, "started");
     }
 }

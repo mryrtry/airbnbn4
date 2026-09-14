@@ -1,5 +1,6 @@
 package main.delegate;
 
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -13,10 +14,9 @@ public class PrepareListingCreatedNotificationDelegate implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) {
-        Object listingIdObj = execution.getVariable("listingId");
-        Long listingId = listingIdObj == null ? null : ((Number) listingIdObj).longValue();
-        String title = (String) execution.getVariable("title");
-        String address = (String) execution.getVariable("address");
+        Long listingId = CamundaVars.getLong(execution, "listingId");
+        String title = CamundaVars.getString(execution, "title");
+        String address = CamundaVars.getString(execution, "address");
 
         execution.setVariable("notificationType", "LISTING_CREATED");
         execution.setVariable("notificationSubject", "Объявление создано: " + title);

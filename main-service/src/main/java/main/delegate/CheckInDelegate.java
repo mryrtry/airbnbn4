@@ -1,6 +1,7 @@
 package main.delegate;
 
-import main.service.BookingService;
+import main.service.BookingLifecycleService;
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.springframework.stereotype.Component;
@@ -8,22 +9,15 @@ import org.springframework.stereotype.Component;
 @Component("checkInDelegate")
 public class CheckInDelegate implements JavaDelegate {
 
-    private final BookingService bookingService;
+    private final BookingLifecycleService lifecycleService;
 
-    public CheckInDelegate(BookingService bookingService) {
-        this.bookingService = bookingService;
+    public CheckInDelegate(BookingLifecycleService lifecycleService) {
+        this.lifecycleService = lifecycleService;
     }
 
     @Override
     public void execute(DelegateExecution execution) {
-        Long bookingId = toLong(execution.getVariable("bookingId"));
-        if (bookingId == null) throw new IllegalStateException("bookingId is null");
-        bookingService.checkIn(bookingId);
-    }
-
-    private Long toLong(Object v) {
-        if (v == null) return null;
-        if (v instanceof Number n) return n.longValue();
-        try { return Long.parseLong(v.toString()); } catch (Exception e) { return null; }
+        Long bookingId = CamundaVars.getLong(execution, "bookingId");
+        lifecycleService.checkIn(bookingId);
     }
 }

@@ -1,7 +1,7 @@
 package main.controller;
 
 import main.dto.BookingDto;
-import main.service.BookingService;
+import main.service.BookingQueryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,27 +16,27 @@ import java.util.List;
 @RequestMapping("/api/bookings")
 public class BookingController {
 
-    private final BookingService bookingService;
+    private final BookingQueryService bookingQueryService;
 
-    public BookingController(BookingService bookingService) {
-        this.bookingService = bookingService;
+    public BookingController(BookingQueryService bookingQueryService) {
+        this.bookingQueryService = bookingQueryService;
     }
 
     @GetMapping("/my")
     @PreAuthorize("@permissionService.hasPermission('BOOKING_READ')")
     public ResponseEntity<List<BookingDto>> getMy(Authentication auth) {
-        return ResponseEntity.ok(bookingService.getMyBookings(auth.getName()));
+        return ResponseEntity.ok(bookingQueryService.getMyBookings(auth.getName()));
     }
 
     @GetMapping("/listing/{listingId}")
     @PreAuthorize("@permissionService.hasPermission('BOOKING_READ')")
     public ResponseEntity<List<BookingDto>> getByListing(@PathVariable Long listingId) {
-        return ResponseEntity.ok(bookingService.getByListing(listingId));
+        return ResponseEntity.ok(bookingQueryService.getByListing(listingId));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("@permissionService.hasPermission('BOOKING_READ')")
     public ResponseEntity<BookingDto> getOne(@PathVariable Long id) {
-        return ResponseEntity.ok(bookingService.getBooking(id));
+        return ResponseEntity.ok(bookingQueryService.getBooking(id));
     }
 }

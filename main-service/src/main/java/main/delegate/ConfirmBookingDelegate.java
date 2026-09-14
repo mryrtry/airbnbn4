@@ -1,7 +1,8 @@
 package main.delegate;
 
 import main.entity.Booking;
-import main.service.BookingService;
+import main.service.BookingLifecycleService;
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -15,29 +16,23 @@ public class ConfirmBookingDelegate implements JavaDelegate {
 
     private static final Logger log = LoggerFactory.getLogger(ConfirmBookingDelegate.class);
 
-    private final BookingService bookingService;
+    private final BookingLifecycleService lifecycleService;
 
-    public ConfirmBookingDelegate(BookingService bookingService) {
-        this.bookingService = bookingService;
+    public ConfirmBookingDelegate(BookingLifecycleService lifecycleService) {
+        this.lifecycleService = lifecycleService;
     }
 
     @Override
     public void execute(DelegateExecution execution) {
-        Long bookingId = toLong(execution.getVariable("bookingId"));
-        String comment = (String) execution.getVariable("ownerComment");
+        Long bookingId = CamundaVars.getLong(execution, "bookingId");
+        String comment = CamundaVars.getString(execution, "ownerComment");
 
-        List<Booking> autoRejected = bookingService.approveBooking(bookingId, comment);
+        List<Booking> autoRejected = lifecycleService.approve(bookingId, comment);
         List<Long> ids = autoRejected.stream().map(Booking::getId).toList();
 
         execution.setVariable("autoRejectedBookingIds", ids);
         execution.setVariable("autoRejectedCount", ids.size());
 
         log.info("Booking {} approved; auto-rejected {} overlapping", bookingId, ids.size());
-    }
-
-    private Long toLong(Object v) {
-        if (v == null) return null;
-        if (v instanceof Number n) return n.longValue();
-        try { return Long.parseLong(v.toString()); } catch (Exception e) { return null; }
     }
 }

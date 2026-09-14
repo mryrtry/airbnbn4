@@ -3,35 +3,45 @@
   "schemaVersion": 16,
   "components": [
     {
-      "label": "Название",
+      "type": "text",
+      "label": "Редактирование объявления",
+      "id": "InfoHeader",
+      "text": "Измените данные объявления."
+    },
+    {
       "type": "textfield",
-      "layout": { "row": "Row_1", "columns": null },
+      "label": "ID объявления",
+      "id": "InfoListingId",
+      "key": "formListingId",
+      "readonly": true
+    },
+    {
+      "type": "textfield",
+      "label": "Название",
       "id": "Field_title",
       "key": "title",
-      "validate": { "required": true }
+      "validate": { "required": true, "minLength": 3, "maxLength": 255 }
     },
     {
-      "label": "Адрес",
       "type": "textfield",
-      "layout": { "row": "Row_2", "columns": null },
+      "label": "Адрес",
       "id": "Field_address",
       "key": "address",
-      "validate": { "required": true }
+      "validate": { "required": true, "minLength": 3, "maxLength": 255 }
     },
     {
-      "label": "Описание",
       "type": "textarea",
-      "layout": { "row": "Row_3", "columns": null },
+      "label": "Описание",
       "id": "Field_description",
-      "key": "description"
+      "key": "description",
+      "validate": { "maxLength": 2000 }
     },
     {
-      "label": "Цена за ночь",
       "type": "number",
-      "layout": { "row": "Row_4", "columns": null },
+      "label": "Цена за ночь",
       "id": "Field_price",
       "key": "price",
-      "validate": { "required": true, "min": 0 }
+      "validate": { "required": true, "min": 1, "max": 1000000 }
     }
   ],
   "type": "default"

@@ -20,13 +20,21 @@
       <bpmn:outgoing>F1</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Task_FillForm" />
+    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Task_PrepareListingForm" />
 
-    <bpmn:userTask id="Task_FillForm" name="Fill listing form"
+    <bpmn:serviceTask id="Task_PrepareListingForm" name="Prepare listing form"
+                      camunda:delegateExpression="${prepareListingFormDelegate}">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F1b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F1b" sourceRef="Task_PrepareListingForm" targetRef="Task_FillForm" />
+
+    <bpmn:userTask id="Task_FillForm" name="Заполнение объявления"
                    camunda:candidateUsers="${initiatorUserId}"
                    camunda:formRef="create-listing"
                    camunda:formRefBinding="latest">
-      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:incoming>F1b</bpmn:incoming>
       <bpmn:outgoing>F2</bpmn:outgoing>
     </bpmn:userTask>
 

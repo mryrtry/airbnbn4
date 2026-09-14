@@ -1,5 +1,6 @@
 package main.delegate;
 
+import main.util.CamundaVars;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -13,8 +14,8 @@ public class PrepareListingFailedNotificationDelegate implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) {
-        String error = (String) execution.getVariable("createError");
-        String title = (String) execution.getVariable("title");
+        String error = CamundaVars.getString(execution, "createError");
+        String title = CamundaVars.getString(execution, "title");
 
         execution.setVariable("notificationType", "LISTING_CREATE_FAILED");
         execution.setVariable("notificationSubject", "Ошибка создания объявления: " + title);
