@@ -5,6 +5,7 @@ import main.entity.BookingStatus;
 import main.entity.Listing;
 import main.repository.BookingRepository;
 import main.repository.ListingRepository;
+import main.service.BitrixService;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Component("createBookingDelegate")
 public class CreateBookingDelegate implements JavaDelegate {
@@ -22,11 +24,14 @@ public class CreateBookingDelegate implements JavaDelegate {
 
     private final BookingRepository bookingRepository;
     private final ListingRepository listingRepository;
+    private final BitrixService bitrixService;
 
     public CreateBookingDelegate(BookingRepository bookingRepository,
-                                 ListingRepository listingRepository) {
+                                 ListingRepository listingRepository,
+                                 BitrixService bitrixService) {
         this.bookingRepository = bookingRepository;
         this.listingRepository = listingRepository;
+        this.bitrixService = bitrixService;
     }
 
     @Override
@@ -57,10 +62,20 @@ public class CreateBookingDelegate implements JavaDelegate {
         booking.setStatus(BookingStatus.PENDING_OWNER);
         booking.setBookingStart(start);
         booking.setBookingEnd(end);
+        long nights = ChronoUnit.DAYS.between(start, end);
+        booking.setTotalPrice(listing.getPrice().multiply(java.math.BigDecimal.valueOf(nights)));
         booking.setProcessInstanceId(processInstanceId);
         booking.setCreatedAt(Instant.now());
 
         Booking saved = bookingRepository.save(booking);
+        try {
+            long dealId = bitrixService.createBookingDeal(saved, listing);
+            saved.setBitrixDealId(dealId);
+            saved = bookingRepository.save(saved);
+        } catch (Exception exception) {
+            log.warn("Failed to create Bitrix24 deal for booking {}: {}",
+                    saved.getId(), exception.getMessage());
+        }
         execution.setVariable("bookingId", saved.getId());
         execution.setVariable("ownerId", saved.getOwnerId());
         execution.setVariable("guestId", saved.getGuestId());

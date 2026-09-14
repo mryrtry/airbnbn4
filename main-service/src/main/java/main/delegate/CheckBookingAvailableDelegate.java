@@ -39,6 +39,7 @@ public class CheckBookingAvailableDelegate implements JavaDelegate {
     @Override
     public void execute(DelegateExecution execution) {
         execution.removeVariable("checkError");
+        clearBusinessError(execution);
 
         Long listingId = CamundaVars.getLong(execution, "listingId");
         String guestId = CamundaVars.getString(execution, "initiatorUserId");
@@ -49,7 +50,7 @@ public class CheckBookingAvailableDelegate implements JavaDelegate {
 
         String error = validate(listingId, guestId, start, end);
         if (error != null) {
-            execution.setVariable("checkError", error);
+            setBusinessError(execution, error);
             return;
         }
 
@@ -57,7 +58,7 @@ public class CheckBookingAvailableDelegate implements JavaDelegate {
 
         error = checkListing(listing, guestId, listingId, start, end);
         if (error != null) {
-            execution.setVariable("checkError", error);
+            setBusinessError(execution, error);
             return;
         }
 
@@ -100,5 +101,25 @@ public class CheckBookingAvailableDelegate implements JavaDelegate {
             return ERROR_HAS_ACTIVE;
         }
         return null;
+    }
+
+    private void clearBusinessError(DelegateExecution execution) {
+        execution.removeVariable("processErrorCode");
+        execution.removeVariable("processErrorMessage");
+    }
+
+    private void setBusinessError(DelegateExecution execution, String error) {
+        execution.setVariable("checkError", error);
+        execution.setVariable("processErrorCode", error);
+        execution.setVariable("processErrorMessage", switch (error) {
+            case ERROR_NOT_FOUND -> "Объявление с указанным ID не найдено.";
+            case ERROR_NOT_AVAILABLE -> "Объявление недоступно для бронирования.";
+            case ERROR_OWN_LISTING -> "Нельзя забронировать собственное объявление.";
+            case ERROR_HAS_ACTIVE -> "На выбранные даты уже существует активное бронирование.";
+            case ERROR_NO_DATES -> "Необходимо указать даты заезда и выезда.";
+            case ERROR_INVALID_DATES -> "Дата выезда должна быть позже даты заезда.";
+            case ERROR_DATE_IN_PAST -> "Даты бронирования не могут находиться в прошлом.";
+            default -> "Бронирование не может быть создано.";
+        });
     }
 }

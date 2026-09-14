@@ -2,6 +2,11 @@ server:
   port: 8080
 
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+      - optional:file:main-service/.env[.properties]
   application:
     name: main-service
 
@@ -46,6 +51,9 @@ camunda.bpm:
     enabled: true
 
 app:
+  bitrix:
+    webhook-url: ${BITRIX_WEBHOOK_URL:}
+
   jwt:
     secret: "SpudEOlfJSktEta5g94MgTH7IuGqX-V9TPaxGvFb_us"
     access-ttl-ms: 900000

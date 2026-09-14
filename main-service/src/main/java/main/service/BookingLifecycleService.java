@@ -38,17 +38,20 @@ public class BookingLifecycleService {
     private final BookingAvailabilityService availabilityService;
     private final RuntimeService runtimeService;
     private final TaskService taskService;
+    private final BitrixService bitrixService;
 
     public BookingLifecycleService(BookingRepository bookingRepository,
                                    ListingRepository listingRepository,
                                    BookingAvailabilityService availabilityService,
                                    RuntimeService runtimeService,
-                                   TaskService taskService) {
+                                   TaskService taskService,
+                                   BitrixService bitrixService) {
         this.bookingRepository = bookingRepository;
         this.listingRepository = listingRepository;
         this.availabilityService = availabilityService;
         this.runtimeService = runtimeService;
         this.taskService = taskService;
+        this.bitrixService = bitrixService;
     }
 
     @Transactional
@@ -75,12 +78,14 @@ public class BookingLifecycleService {
             other.setOwnerComment(autoComment);
             other.setUpdatedAt(now);
             bookingRepository.save(other);
+            updateBitrixDeal(other);
             rejected.add(other);
         }
 
         current.setStatus(BookingStatus.APPROVED);
         current.setUpdatedAt(now);
         bookingRepository.save(current);
+        updateBitrixDeal(current);
 
         listing.setStatus(ListingStatus.BOOKED);
         listing.setUpdatedAt(now);
@@ -125,6 +130,7 @@ public class BookingLifecycleService {
         }
         booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
+        updateBitrixDeal(booking);
         log.info("Booking {} rejected", bookingId);
     }
 
@@ -136,6 +142,7 @@ public class BookingLifecycleService {
         booking.setStatus(BookingStatus.CHECKED_IN);
         booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
+        updateBitrixDeal(booking);
 
         listing.setStatus(ListingStatus.LIVING);
         listing.setUpdatedAt(Instant.now());
@@ -152,6 +159,7 @@ public class BookingLifecycleService {
         booking.setStatus(BookingStatus.CHECKED_OUT);
         booking.setUpdatedAt(Instant.now());
         bookingRepository.save(booking);
+        updateBitrixDeal(booking);
 
         listing.setStatus(ListingStatus.AVAILABLE);
         listing.setUpdatedAt(Instant.now());
@@ -168,5 +176,14 @@ public class BookingLifecycleService {
     private Listing findListingOrThrow(Long id) {
         return listingRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Listing not found: " + id));
+    }
+
+    private void updateBitrixDeal(Booking booking) {
+        try {
+            bitrixService.updateBookingDeal(booking);
+        } catch (Exception exception) {
+            log.warn("Failed to update Bitrix24 deal {} for booking {}: {}",
+                    booking.getBitrixDealId(), booking.getId(), exception.getMessage());
+        }
     }
 }

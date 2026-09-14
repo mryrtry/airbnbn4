@@ -25,6 +25,8 @@ public class CreateListingDelegate implements JavaDelegate {
     @Override
     public void execute(DelegateExecution execution) {
         execution.removeVariable("createError");
+        execution.removeVariable("processErrorCode");
+        execution.removeVariable("processErrorMessage");
 
         try {
             Long listingId = listingLifecycleService.create(
@@ -40,7 +42,19 @@ public class CreateListingDelegate implements JavaDelegate {
         } catch (ValidationException ex) {
             log.warn("Listing creation validation failed: {}", ex.getMessage());
             execution.setVariable("createError", ex.getMessage());
+            execution.setVariable("processErrorCode", "LISTING_CREATE_VALIDATION_FAILED");
+            execution.setVariable("processErrorMessage", translateValidationMessage(ex.getMessage()));
         }
+    }
+
+    private String translateValidationMessage(String message) {
+        return switch (message) {
+            case "title is required" -> "Необходимо указать название объявления.";
+            case "address is required" -> "Необходимо указать адрес объявления.";
+            case "price is required" -> "Необходимо указать цену объявления.";
+            case "price must be non-negative" -> "Цена объявления не может быть отрицательной.";
+            default -> message;
+        };
     }
 
     private BigDecimal toBigDecimal(Object value) {

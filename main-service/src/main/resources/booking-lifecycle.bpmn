@@ -79,43 +79,43 @@
       <bpmn:outgoing>F_DateInPast</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:sequenceFlow id="F_NotFound" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_NotFound">
+    <bpmn:sequenceFlow id="F_NotFound" sourceRef="Gw_CheckAvailable" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_FOUND'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_NotAvailable" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_NotAvailable">
+    <bpmn:sequenceFlow id="F_NotAvailable" sourceRef="Gw_CheckAvailable" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_AVAILABLE'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_OwnListing" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_OwnListing">
+    <bpmn:sequenceFlow id="F_OwnListing" sourceRef="Gw_CheckAvailable" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'OWN_LISTING'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_HasActive" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_HasActive">
+    <bpmn:sequenceFlow id="F_HasActive" sourceRef="Gw_CheckAvailable" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'HAS_ACTIVE'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_NoDates" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_NoDates">
+    <bpmn:sequenceFlow id="F_NoDates" sourceRef="Gw_CheckAvailable" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NO_DATES'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_InvalidDates" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_InvalidDates">
+    <bpmn:sequenceFlow id="F_InvalidDates" sourceRef="Gw_CheckAvailable" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'INVALID_DATES'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_DateInPast" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_DateInPast">
+    <bpmn:sequenceFlow id="F_DateInPast" sourceRef="Gw_CheckAvailable" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'DATE_IN_PAST'}
       </bpmn:conditionExpression>
@@ -123,32 +123,32 @@
 
     <bpmn:sequenceFlow id="F_CheckOk" sourceRef="Gw_CheckAvailable" targetRef="Task_CreateBooking" />
 
-    <bpmn:endEvent id="End_Booking_NotFound" name="Not found">
+    <bpmn:serviceTask id="Task_PrepareBusinessError" name="Подготовка уведомления об ошибке"
+                      camunda:delegateExpression="${prepareBusinessErrorNotificationDelegate}">
       <bpmn:incoming>F_NotFound</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Booking_NotAvailable" name="Not available">
       <bpmn:incoming>F_NotAvailable</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Booking_OwnListing" name="Own listing">
       <bpmn:incoming>F_OwnListing</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Booking_HasActive" name="Has active booking">
       <bpmn:incoming>F_HasActive</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Booking_NoDates" name="No dates">
       <bpmn:incoming>F_NoDates</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Booking_InvalidDates" name="Invalid dates">
       <bpmn:incoming>F_InvalidDates</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Booking_DateInPast" name="Date in past">
       <bpmn:incoming>F_DateInPast</bpmn:incoming>
+      <bpmn:outgoing>F_BusinessErrorPrepared</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F_BusinessErrorPrepared" sourceRef="Task_PrepareBusinessError"
+                       targetRef="Task_SendBusinessError" />
+
+    <bpmn:serviceTask id="Task_SendBusinessError" name="Отправка уведомления об ошибке"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F_BusinessErrorPrepared</bpmn:incoming>
+      <bpmn:outgoing>F_BusinessErrorSent</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F_BusinessErrorSent" sourceRef="Task_SendBusinessError"
+                       targetRef="End_Booking_BusinessError" />
+
+    <bpmn:endEvent id="End_Booking_BusinessError" name="Ошибка данных">
+      <bpmn:incoming>F_BusinessErrorSent</bpmn:incoming>
     </bpmn:endEvent>
 
     <!-- ====== CREATE BOOKING ====== -->

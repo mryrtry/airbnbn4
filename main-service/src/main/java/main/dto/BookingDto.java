@@ -2,6 +2,7 @@ package main.dto;
 
 import main.entity.Booking;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -14,6 +15,8 @@ public record BookingDto(
         LocalDate bookingStart,
         LocalDate bookingEnd,
         String ownerComment,
+        Long bitrixDealId,
+        BigDecimal totalPrice,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -27,6 +30,8 @@ public record BookingDto(
                 b.getBookingStart(),
                 b.getBookingEnd(),
                 b.getOwnerComment(),
+                b.getBitrixDealId(),
+                b.getTotalPrice(),
                 b.getCreatedAt(),
                 b.getUpdatedAt()
         );

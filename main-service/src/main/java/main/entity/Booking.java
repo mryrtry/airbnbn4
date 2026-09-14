@@ -2,6 +2,7 @@ package main.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -37,6 +38,12 @@ public class Booking {
 
     @Column(name = "process_instance_id", unique = true)
     private String processInstanceId;
+
+    @Column(name = "bitrix_deal_id")
+    private Long bitrixDealId;
+
+    @Column(name = "total_price", precision = 12, scale = 2)
+    private BigDecimal totalPrice;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -115,6 +122,22 @@ public class Booking {
 
     public void setProcessInstanceId(String processInstanceId) {
         this.processInstanceId = processInstanceId;
+    }
+
+    public Long getBitrixDealId() {
+        return bitrixDealId;
+    }
+
+    public void setBitrixDealId(Long bitrixDealId) {
+        this.bitrixDealId = bitrixDealId;
+    }
+
+    public BigDecimal getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
     }
 
     public Instant getCreatedAt() {

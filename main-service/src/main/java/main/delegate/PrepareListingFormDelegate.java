@@ -4,6 +4,8 @@ import main.entity.Listing;
 import main.entity.ListingStatus;
 import main.repository.ListingRepository;
 import main.util.CamundaVars;
+import main.util.UserNames;
+import org.camunda.bpm.engine.IdentityService;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.slf4j.Logger;
@@ -19,9 +21,12 @@ public class PrepareListingFormDelegate implements JavaDelegate {
     private static final Logger log = LoggerFactory.getLogger(PrepareListingFormDelegate.class);
 
     private final ListingRepository listingRepository;
+    private final IdentityService identityService;
 
-    public PrepareListingFormDelegate(ListingRepository listingRepository) {
+    public PrepareListingFormDelegate(ListingRepository listingRepository,
+                                      IdentityService identityService) {
         this.listingRepository = listingRepository;
+        this.identityService = identityService;
     }
 
     @Override
@@ -40,12 +45,28 @@ public class PrepareListingFormDelegate implements JavaDelegate {
             }
         }
 
-        List<Listing> available = listingRepository.findByStatus(ListingStatus.AVAILABLE);
+        String ownerId = CamundaVars.getString(execution, "initiatorUserId");
+        List<Listing> available = ownerId == null
+                ? List.of()
+                : listingRepository.findByOwnerIdAndStatus(ownerId, ListingStatus.AVAILABLE);
         String options = available.stream()
-                .map(l -> l.getId() + ": " + l.getTitle() + " (" + l.getAddress() + ")")
-                .collect(Collectors.joining("; "));
+                .map(this::formatListing)
+                .collect(Collectors.joining("\n\n"));
 
         execution.setVariable("formAvailableListings", options.isEmpty() ? "—" : options);
         log.info("PrepareListingForm: {} available listings", available.size());
+    }
+
+    private String formatListing(Listing listing) {
+        return "ID: " + listing.getId()
+                + "\nНазвание: " + listing.getTitle()
+                + "\nАдрес: " + listing.getAddress()
+                + "\nОписание: " + valueOrDash(listing.getDescription())
+                + "\nВладелец: " + UserNames.resolve(identityService, listing.getOwnerId())
+                + "\nЦена за ночь: " + listing.getPrice().toPlainString();
+    }
+
+    private String valueOrDash(String value) {
+        return value == null || value.isBlank() ? "—" : value;
     }
 }

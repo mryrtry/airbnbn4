@@ -13,6 +13,10 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
 
     List<Listing> findByOwnerIdAndStatusNot(String ownerId, ListingStatus status);
 
+    List<Listing> findByOwnerIdAndStatus(String ownerId, ListingStatus status);
+
+    boolean existsByOwnerIdAndStatus(String ownerId, ListingStatus status);
+
     List<Listing> findByStatus(ListingStatus status);
 
     List<Listing> findByStatusNot(ListingStatus status);

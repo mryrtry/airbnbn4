@@ -28,19 +28,21 @@ public class CheckListingOwnershipDelegate implements JavaDelegate {
     @Override
     public void execute(DelegateExecution execution) {
         execution.removeVariable("checkError");
+        execution.removeVariable("processErrorCode");
+        execution.removeVariable("processErrorMessage");
 
         Long listingId = CamundaVars.getLong(execution, "listingId");
         String userId = CamundaVars.getString(execution, "initiatorUserId");
 
         if (listingId == null) {
-            execution.setVariable("checkError", ERROR_NOT_FOUND);
+            setBusinessError(execution, ERROR_NOT_FOUND);
             return;
         }
 
         Listing listing = listingRepository.findById(listingId).orElse(null);
         String error = evaluate(listing, userId, listingId);
         if (error != null) {
-            execution.setVariable("checkError", error);
+            setBusinessError(execution, error);
             return;
         }
 
@@ -63,5 +65,16 @@ public class CheckListingOwnershipDelegate implements JavaDelegate {
             return ERROR_NOT_AVAILABLE;
         }
         return null;
+    }
+
+    private void setBusinessError(DelegateExecution execution, String error) {
+        execution.setVariable("checkError", error);
+        execution.setVariable("processErrorCode", error);
+        execution.setVariable("processErrorMessage", switch (error) {
+            case ERROR_NOT_FOUND -> "Объявление с указанным ID не найдено.";
+            case ERROR_NOT_OWNER -> "Объявление не принадлежит вам.";
+            case ERROR_NOT_AVAILABLE -> "Объявление недоступно для изменения или удаления.";
+            default -> "Операция с объявлением недоступна.";
+        });
     }
 }

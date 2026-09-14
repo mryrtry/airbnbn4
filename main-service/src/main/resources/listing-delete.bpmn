@@ -20,10 +20,36 @@
       <bpmn:outgoing>F1</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Gw_ListingIdProvided" />
+    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Task_CheckOwnerAvailableListings" />
+
+    <bpmn:serviceTask id="Task_CheckOwnerAvailableListings" name="Проверка доступных объявлений"
+                      camunda:delegateExpression="${checkOwnerAvailableListingsDelegate}">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F1_CheckAvailable</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F1_CheckAvailable" sourceRef="Task_CheckOwnerAvailableListings"
+                       targetRef="Gw_HasAvailableListings" />
+
+    <bpmn:exclusiveGateway id="Gw_HasAvailableListings" name="Есть доступные объявления?"
+                           default="F_NoAvailableListings">
+      <bpmn:incoming>F1_CheckAvailable</bpmn:incoming>
+      <bpmn:outgoing>F_HasAvailableListings</bpmn:outgoing>
+      <bpmn:outgoing>F_NoAvailableListings</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_HasAvailableListings" name="Да"
+                       sourceRef="Gw_HasAvailableListings" targetRef="Gw_ListingIdProvided">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${hasAvailableListings}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_NoAvailableListings" name="Нет"
+                       sourceRef="Gw_HasAvailableListings" targetRef="Task_PrepareBusinessError" />
 
     <bpmn:exclusiveGateway id="Gw_ListingIdProvided" name="listingId задан?" default="F_AskListing">
-      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:incoming>F_HasAvailableListings</bpmn:incoming>
       <bpmn:outgoing>F_ListingIdProvided</bpmn:outgoing>
       <bpmn:outgoing>F_AskListing</bpmn:outgoing>
     </bpmn:exclusiveGateway>
@@ -75,37 +101,25 @@
       <bpmn:outgoing>F_NotAvailable</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:sequenceFlow id="F_NotFound" sourceRef="Gw_CheckResult" targetRef="End_Delete_NotFound">
+    <bpmn:sequenceFlow id="F_NotFound" sourceRef="Gw_CheckResult" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_FOUND'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_NotOwner" sourceRef="Gw_CheckResult" targetRef="End_Delete_NotOwner">
+    <bpmn:sequenceFlow id="F_NotOwner" sourceRef="Gw_CheckResult" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_OWNER'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:sequenceFlow id="F_NotAvailable" sourceRef="Gw_CheckResult" targetRef="End_Delete_NotAvailable">
+    <bpmn:sequenceFlow id="F_NotAvailable" sourceRef="Gw_CheckResult" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_AVAILABLE'}
       </bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
     <bpmn:sequenceFlow id="F_CheckOk" sourceRef="Gw_CheckResult" targetRef="Task_PrepareListingForm_Confirm" />
-
-    <bpmn:endEvent id="End_Delete_NotFound" name="Not found">
-      <bpmn:incoming>F_NotFound</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Delete_NotOwner" name="Not owner">
-      <bpmn:incoming>F_NotOwner</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:endEvent id="End_Delete_NotAvailable" name="Not available">
-      <bpmn:incoming>F_NotAvailable</bpmn:incoming>
-    </bpmn:endEvent>
 
     <bpmn:serviceTask id="Task_PrepareListingForm_Confirm" name="Prepare listing form (confirm)"
                       camunda:delegateExpression="${prepareListingFormDelegate}">
@@ -140,7 +154,7 @@
       <bpmn:outgoing>F_DeleteFail</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
-    <bpmn:sequenceFlow id="F_DeleteFail" sourceRef="Gw_DeleteResult" targetRef="End_Delete_Failed">
+    <bpmn:sequenceFlow id="F_DeleteFail" sourceRef="Gw_DeleteResult" targetRef="Task_PrepareBusinessError">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
         ${execution.hasVariable('deleteError') &amp;&amp; deleteError != null}
       </bpmn:conditionExpression>
@@ -152,8 +166,30 @@
       <bpmn:incoming>F_DeleteOk</bpmn:incoming>
     </bpmn:endEvent>
 
-    <bpmn:endEvent id="End_Delete_Failed" name="Delete failed">
+    <bpmn:serviceTask id="Task_PrepareBusinessError" name="Подготовка уведомления об ошибке"
+                      camunda:delegateExpression="${prepareBusinessErrorNotificationDelegate}">
+      <bpmn:incoming>F_NoAvailableListings</bpmn:incoming>
+      <bpmn:incoming>F_NotFound</bpmn:incoming>
+      <bpmn:incoming>F_NotOwner</bpmn:incoming>
+      <bpmn:incoming>F_NotAvailable</bpmn:incoming>
       <bpmn:incoming>F_DeleteFail</bpmn:incoming>
+      <bpmn:outgoing>F_BusinessErrorPrepared</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F_BusinessErrorPrepared" sourceRef="Task_PrepareBusinessError"
+                       targetRef="Task_SendBusinessError" />
+
+    <bpmn:serviceTask id="Task_SendBusinessError" name="Отправка уведомления об ошибке"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F_BusinessErrorPrepared</bpmn:incoming>
+      <bpmn:outgoing>F_BusinessErrorSent</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F_BusinessErrorSent" sourceRef="Task_SendBusinessError"
+                       targetRef="End_Delete_BusinessError" />
+
+    <bpmn:endEvent id="End_Delete_BusinessError" name="Ошибка данных">
+      <bpmn:incoming>F_BusinessErrorSent</bpmn:incoming>
     </bpmn:endEvent>
 
   </bpmn:process>

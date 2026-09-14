@@ -83,7 +83,7 @@
     </bpmn:endEvent>
 
     <bpmn:serviceTask id="Task_PrepareFailed" name="Prepare failed notification"
-                      camunda:delegateExpression="${prepareListingFailedNotificationDelegate}">
+                      camunda:delegateExpression="${prepareBusinessErrorNotificationDelegate}">
       <bpmn:incoming>F_Fail</bpmn:incoming>
       <bpmn:outgoing>F6</bpmn:outgoing>
     </bpmn:serviceTask>
