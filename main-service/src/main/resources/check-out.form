@@ -1,0 +1,15 @@
+{
+  "id": "check-out",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "Подтверждаю выезд",
+      "type": "checkbox",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_confirm",
+      "key": "checkOutConfirm",
+      "validate": { "required": true }
+    }
+  ],
+  "type": "default"
+}

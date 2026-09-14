@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Defs_ListingUpdate"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="listing-update" name="Listing Update" isExecutable="true"
+                camunda:historyTimeToLive="180">
+
+    <bpmn:startEvent id="Start_Update" name="Start">
+      <bpmn:outgoing>F0</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:sequenceFlow id="F0" sourceRef="Start_Update" targetRef="Task_InitContext" />
+
+    <bpmn:serviceTask id="Task_InitContext" name="Init user context"
+                      camunda:delegateExpression="${initUserContextDelegate}">
+      <bpmn:incoming>F0</bpmn:incoming>
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Gw_ListingIdProvided" />
+
+    <!-- Gateway: listingId задан? -->
+    <bpmn:exclusiveGateway id="Gw_ListingIdProvided" name="listingId задан?" default="F_AskListing">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F_ListingIdProvided</bpmn:outgoing>
+      <bpmn:outgoing>F_AskListing</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_ListingIdProvided" name="Да"
+                       sourceRef="Gw_ListingIdProvided" targetRef="Task_CheckOwnership">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('listingId') &amp;&amp; listingId != null}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_AskListing" name="Нет"
+                       sourceRef="Gw_ListingIdProvided" targetRef="Task_SelectListing" />
+
+    <!-- User task: выбор листинга (только если listingId не задан) -->
+    <bpmn:userTask id="Task_SelectListing" name="Выбрать листинг"
+                   camunda:candidateGroups="OWNER"
+                   camunda:formRef="select-listing"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>F_AskListing</bpmn:incoming>
+      <bpmn:outgoing>F2_AfterSelect</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="F2_AfterSelect" sourceRef="Task_SelectListing"
+                       targetRef="Task_CheckOwnership" />
+
+    <bpmn:serviceTask id="Task_CheckOwnership" name="Check ownership"
+                      camunda:delegateExpression="${checkListingOwnershipDelegate}">
+      <bpmn:incoming>F_ListingIdProvided</bpmn:incoming>
+      <bpmn:incoming>F2_AfterSelect</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F2" sourceRef="Task_CheckOwnership" targetRef="Gw_CheckResult" />
+
+    <bpmn:exclusiveGateway id="Gw_CheckResult" name="Check OK?" default="F_CheckOk">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>F_CheckOk</bpmn:outgoing>
+      <bpmn:outgoing>F_NotFound</bpmn:outgoing>
+      <bpmn:outgoing>F_NotOwner</bpmn:outgoing>
+      <bpmn:outgoing>F_NotAvailable</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_NotFound" sourceRef="Gw_CheckResult" targetRef="End_Update_NotFound">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_FOUND'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_NotOwner" sourceRef="Gw_CheckResult" targetRef="End_Update_NotOwner">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_OWNER'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_NotAvailable" sourceRef="Gw_CheckResult" targetRef="End_Update_NotAvailable">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_AVAILABLE'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_CheckOk" sourceRef="Gw_CheckResult" targetRef="Task_LoadForEdit" />
+
+    <bpmn:endEvent id="End_Update_NotFound" name="Not found">
+      <bpmn:incoming>F_NotFound</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Update_NotOwner" name="Not owner">
+      <bpmn:incoming>F_NotOwner</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Update_NotAvailable" name="Not available">
+      <bpmn:incoming>F_NotAvailable</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:serviceTask id="Task_LoadForEdit" name="Load listing"
+                      camunda:delegateExpression="${loadListingForEditDelegate}">
+      <bpmn:incoming>F_CheckOk</bpmn:incoming>
+      <bpmn:outgoing>F3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F3" sourceRef="Task_LoadForEdit" targetRef="Task_EditForm" />
+
+    <bpmn:userTask id="Task_EditForm" name="Edit listing form"
+                   camunda:candidateUsers="${initiatorUserId}"
+                   camunda:formRef="edit-listing"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="F4" sourceRef="Task_EditForm" targetRef="Task_UpdateListing" />
+
+    <bpmn:serviceTask id="Task_UpdateListing" name="Save changes"
+                      camunda:delegateExpression="${updateListingDelegate}">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F5" sourceRef="Task_UpdateListing" targetRef="Gw_UpdateResult" />
+
+    <bpmn:exclusiveGateway id="Gw_UpdateResult" name="Update OK?" default="F_UpdateOk">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:outgoing>F_UpdateOk</bpmn:outgoing>
+      <bpmn:outgoing>F_UpdateFail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_UpdateFail" sourceRef="Gw_UpdateResult" targetRef="End_Update_Failed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('updateError') &amp;&amp; updateError != null}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_UpdateOk" sourceRef="Gw_UpdateResult" targetRef="End_Updated" />
+
+    <bpmn:endEvent id="End_Updated" name="Updated">
+      <bpmn:incoming>F_UpdateOk</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Update_Failed" name="Update failed">
+      <bpmn:incoming>F_UpdateFail</bpmn:incoming>
+    </bpmn:endEvent>
+
+  </bpmn:process>
+</bpmn:definitions>

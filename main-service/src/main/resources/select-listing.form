@@ -1,0 +1,31 @@
+{
+  "id": "select-listing",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "ID листинга",
+      "type": "number",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_listingId",
+      "key": "listingId",
+      "validate": { "required": true, "min": 1 }
+    },
+    {
+      "label": "Дата заезда (YYYY-MM-DD)",
+      "type": "textfield",
+      "layout": { "row": "Row_2", "columns": null },
+      "id": "Field_start",
+      "key": "bookingStart",
+      "validate": { "required": false }
+    },
+    {
+      "label": "Дата выезда (YYYY-MM-DD)",
+      "type": "textfield",
+      "layout": { "row": "Row_3", "columns": null },
+      "id": "Field_end",
+      "key": "bookingEnd",
+      "validate": { "required": false }
+    }
+  ],
+  "type": "default"
+}

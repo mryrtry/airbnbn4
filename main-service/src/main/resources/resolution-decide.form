@@ -1,0 +1,26 @@
+{
+  "id": "resolution-decide",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "Решение",
+      "type": "select",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_decision",
+      "key": "adminDecision",
+      "values": [
+        { "label": "Одобрить", "value": "APPROVE" },
+        { "label": "Отклонить", "value": "REJECT" }
+      ],
+      "validate": { "required": true }
+    },
+    {
+      "label": "Комментарий",
+      "type": "textarea",
+      "layout": { "row": "Row_2", "columns": null },
+      "id": "Field_comment",
+      "key": "adminComment"
+    }
+  ],
+  "type": "default"
+}

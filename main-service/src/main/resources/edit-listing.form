@@ -1,0 +1,38 @@
+{
+  "id": "edit-listing",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "Название",
+      "type": "textfield",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_title",
+      "key": "title",
+      "validate": { "required": true }
+    },
+    {
+      "label": "Адрес",
+      "type": "textfield",
+      "layout": { "row": "Row_2", "columns": null },
+      "id": "Field_address",
+      "key": "address",
+      "validate": { "required": true }
+    },
+    {
+      "label": "Описание",
+      "type": "textarea",
+      "layout": { "row": "Row_3", "columns": null },
+      "id": "Field_description",
+      "key": "description"
+    },
+    {
+      "label": "Цена за ночь",
+      "type": "number",
+      "layout": { "row": "Row_4", "columns": null },
+      "id": "Field_price",
+      "key": "price",
+      "validate": { "required": true, "min": 0 }
+    }
+  ],
+  "type": "default"
+}

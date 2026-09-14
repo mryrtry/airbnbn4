@@ -1,0 +1,19 @@
+{
+  "id": "resolution-pay",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "Решение",
+      "type": "select",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_decision",
+      "key": "userDecision",
+      "values": [
+        { "label": "Оплатить", "value": "PAY" },
+        { "label": "Отказаться", "value": "DECLINE" }
+      ],
+      "validate": { "required": true }
+    }
+  ],
+  "type": "default"
+}

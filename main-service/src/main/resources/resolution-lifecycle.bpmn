@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Defs_ResolutionLifecycle"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="resolution-lifecycle" name="Resolution Lifecycle" isExecutable="true"
+                camunda:historyTimeToLive="180">
+
+    <bpmn:startEvent id="Start_Resolution" name="Start">
+      <bpmn:outgoing>R0</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:sequenceFlow id="R0" sourceRef="Start_Resolution" targetRef="Task_CreateWindow" />
+
+    <!-- ====== CREATE WINDOW (persist + notify owner) ====== -->
+    <bpmn:serviceTask id="Task_CreateWindow" name="Create resolution window"
+                      camunda:delegateExpression="${createResolutionWindowDelegate}">
+      <bpmn:incoming>R0</bpmn:incoming>
+      <bpmn:outgoing>R1</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R1" sourceRef="Task_CreateWindow" targetRef="Task_PrepareNotifyWindowOpened" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyWindowOpened" name="Prepare window-opened notification"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_WINDOW_OPENED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R1</bpmn:incoming>
+      <bpmn:outgoing>R2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R2" sourceRef="Task_PrepareNotifyWindowOpened" targetRef="Task_SendNotifyWindowOpened" />
+
+    <bpmn:serviceTask id="Task_SendNotifyWindowOpened" name="Send window-opened notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R2</bpmn:incoming>
+      <bpmn:outgoing>R3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R3" sourceRef="Task_SendNotifyWindowOpened" targetRef="Task_OwnerFileComplaint" />
+
+    <!-- ====== OWNER FILES COMPLAINT (userTask + boundary timer PT1M) ====== -->
+    <bpmn:userTask id="Task_OwnerFileComplaint" name="Подать жалобу"
+                   camunda:candidateUsers="${ownerId}"
+                   camunda:formRef="file-complaint"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>R3</bpmn:incoming>
+      <bpmn:outgoing>R4</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:boundaryEvent id="Timer_WindowExpire" name="Окно истекло"
+                        attachedToRef="Task_OwnerFileComplaint" cancelActivity="true">
+      <bpmn:outgoing>R_TIMEOUT</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+
+    <bpmn:sequenceFlow id="R_TIMEOUT" sourceRef="Timer_WindowExpire" targetRef="Task_CloseWindowExpired" />
+
+    <bpmn:serviceTask id="Task_CloseWindowExpired" name="Close window (expired)"
+                      camunda:delegateExpression="${closeResolutionWindowExpiredDelegate}">
+      <bpmn:incoming>R_TIMEOUT</bpmn:incoming>
+      <bpmn:outgoing>R_TIMEOUT2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R_TIMEOUT2" sourceRef="Task_CloseWindowExpired" targetRef="Task_PrepareNotifyExpired" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyExpired" name="Prepare expired notification"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_WINDOW_EXPIRED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R_TIMEOUT2</bpmn:incoming>
+      <bpmn:outgoing>R_TIMEOUT3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R_TIMEOUT3" sourceRef="Task_PrepareNotifyExpired" targetRef="Task_SendNotifyExpired" />
+
+    <bpmn:serviceTask id="Task_SendNotifyExpired" name="Send expired notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R_TIMEOUT3</bpmn:incoming>
+      <bpmn:outgoing>R_TIMEOUT4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R_TIMEOUT4" sourceRef="Task_SendNotifyExpired" targetRef="End_WindowExpired" />
+
+    <bpmn:endEvent id="End_WindowExpired" name="Window expired">
+      <bpmn:incoming>R_TIMEOUT4</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ====== COMPLAINT FILED → ADMIN REVIEW ====== -->
+    <bpmn:sequenceFlow id="R4" sourceRef="Task_OwnerFileComplaint" targetRef="Task_RegisterComplaint" />
+
+    <bpmn:serviceTask id="Task_RegisterComplaint" name="Register complaint"
+                      camunda:delegateExpression="${registerComplaintDelegate}">
+      <bpmn:incoming>R4</bpmn:incoming>
+      <bpmn:outgoing>R5</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R5" sourceRef="Task_RegisterComplaint" targetRef="Task_PrepareNotifyComplaintFiled" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyComplaintFiled" name="Prepare complaint-filed notification"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_FILED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R5</bpmn:incoming>
+      <bpmn:outgoing>R6</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R6" sourceRef="Task_PrepareNotifyComplaintFiled" targetRef="Task_SendNotifyComplaintFiled" />
+
+    <bpmn:serviceTask id="Task_SendNotifyComplaintFiled" name="Send complaint-filed notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R6</bpmn:incoming>
+      <bpmn:outgoing>R7</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R7" sourceRef="Task_SendNotifyComplaintFiled" targetRef="Task_AdminReview" />
+
+    <bpmn:userTask id="Task_AdminReview" name="Review complaint"
+                   camunda:candidateGroups="ADMIN"
+                   camunda:formRef="resolution-decide"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>R7</bpmn:incoming>
+      <bpmn:outgoing>R8</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="R8" sourceRef="Task_AdminReview" targetRef="Gw_AdminDecision" />
+
+    <bpmn:exclusiveGateway id="Gw_AdminDecision" name="Admin decision?" default="R_REJECT">
+      <bpmn:incoming>R8</bpmn:incoming>
+      <bpmn:outgoing>R_APPROVE</bpmn:outgoing>
+      <bpmn:outgoing>R_REJECT</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="R_APPROVE" sourceRef="Gw_AdminDecision" targetRef="Task_ApproveComplaint">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${adminDecision == 'APPROVE'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="R_REJECT" sourceRef="Gw_AdminDecision" targetRef="Task_RejectComplaint" />
+
+    <!-- ====== APPROVE PATH ====== -->
+    <bpmn:serviceTask id="Task_ApproveComplaint" name="Approve complaint"
+                      camunda:delegateExpression="${approveComplaintDelegate}">
+      <bpmn:incoming>R_APPROVE</bpmn:incoming>
+      <bpmn:outgoing>R9</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R9" sourceRef="Task_ApproveComplaint" targetRef="Task_PrepareNotifyApprovedGuest" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyApprovedGuest" name="Prepare approved notification (guest)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_APPROVED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R9</bpmn:incoming>
+      <bpmn:outgoing>R10</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R10" sourceRef="Task_PrepareNotifyApprovedGuest" targetRef="Task_SendNotifyApprovedGuest" />
+
+    <bpmn:serviceTask id="Task_SendNotifyApprovedGuest" name="Send approved notification (guest)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R10</bpmn:incoming>
+      <bpmn:outgoing>R11</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R11" sourceRef="Task_SendNotifyApprovedGuest" targetRef="Task_PrepareNotifyApprovedOwner" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyApprovedOwner" name="Prepare approved notification (owner)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_APPROVED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R11</bpmn:incoming>
+      <bpmn:outgoing>R12</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R12" sourceRef="Task_PrepareNotifyApprovedOwner" targetRef="Task_SendNotifyApprovedOwner" />
+
+    <bpmn:serviceTask id="Task_SendNotifyApprovedOwner" name="Send approved notification (owner)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R12</bpmn:incoming>
+      <bpmn:outgoing>R13</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R13" sourceRef="Task_SendNotifyApprovedOwner" targetRef="Task_UserPay" />
+
+    <bpmn:userTask id="Task_UserPay" name="Оплатить компенсацию"
+                   camunda:candidateUsers="${guestId}"
+                   camunda:formRef="resolution-pay"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>R13</bpmn:incoming>
+      <bpmn:outgoing>R14</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="R14" sourceRef="Task_UserPay" targetRef="Gw_UserDecision" />
+
+    <bpmn:exclusiveGateway id="Gw_UserDecision" name="User decision?" default="R_DECLINE">
+      <bpmn:incoming>R14</bpmn:incoming>
+      <bpmn:outgoing>R_PAY</bpmn:outgoing>
+      <bpmn:outgoing>R_DECLINE</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="R_PAY" sourceRef="Gw_UserDecision" targetRef="Task_RegisterPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${userDecision == 'PAY'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="R_DECLINE" sourceRef="Gw_UserDecision" targetRef="Task_BanUser" />
+
+    <!-- ====== PAY PATH ====== -->
+    <bpmn:serviceTask id="Task_RegisterPayment" name="Register payment"
+                      camunda:delegateExpression="${registerPaymentDelegate}">
+      <bpmn:incoming>R_PAY</bpmn:incoming>
+      <bpmn:outgoing>R15</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R15" sourceRef="Task_RegisterPayment" targetRef="Task_PrepareNotifyPaidGuest" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyPaidGuest" name="Prepare paid notification (guest)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_PAID</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R15</bpmn:incoming>
+      <bpmn:outgoing>R16</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R16" sourceRef="Task_PrepareNotifyPaidGuest" targetRef="Task_SendNotifyPaidGuest" />
+
+    <bpmn:serviceTask id="Task_SendNotifyPaidGuest" name="Send paid notification (guest)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R16</bpmn:incoming>
+      <bpmn:outgoing>R17</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R17" sourceRef="Task_SendNotifyPaidGuest" targetRef="Task_PrepareNotifyPaidOwner" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyPaidOwner" name="Prepare paid notification (owner)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_PAID</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R17</bpmn:incoming>
+      <bpmn:outgoing>R18</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R18" sourceRef="Task_PrepareNotifyPaidOwner" targetRef="Task_SendNotifyPaidOwner" />
+
+    <bpmn:serviceTask id="Task_SendNotifyPaidOwner" name="Send paid notification (owner)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R18</bpmn:incoming>
+      <bpmn:outgoing>R19</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R19" sourceRef="Task_SendNotifyPaidOwner" targetRef="End_Paid" />
+
+    <bpmn:endEvent id="End_Paid" name="Paid">
+      <bpmn:incoming>R19</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ====== DECLINE PATH ====== -->
+    <bpmn:serviceTask id="Task_BanUser" name="Ban user"
+                      camunda:delegateExpression="${banUserDelegate}">
+      <bpmn:incoming>R_DECLINE</bpmn:incoming>
+      <bpmn:outgoing>R20</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R20" sourceRef="Task_BanUser" targetRef="Task_PrepareNotifyDeclinedGuest" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyDeclinedGuest" name="Prepare declined notification (guest)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_DECLINED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R20</bpmn:incoming>
+      <bpmn:outgoing>R21</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R21" sourceRef="Task_PrepareNotifyDeclinedGuest" targetRef="Task_SendNotifyDeclinedGuest" />
+
+    <bpmn:serviceTask id="Task_SendNotifyDeclinedGuest" name="Send declined notification (guest)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R21</bpmn:incoming>
+      <bpmn:outgoing>R22</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R22" sourceRef="Task_SendNotifyDeclinedGuest" targetRef="Task_PrepareNotifyDeclinedOwner" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyDeclinedOwner" name="Prepare declined notification (owner)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_DECLINED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R22</bpmn:incoming>
+      <bpmn:outgoing>R23</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R23" sourceRef="Task_PrepareNotifyDeclinedOwner" targetRef="Task_SendNotifyDeclinedOwner" />
+
+    <bpmn:serviceTask id="Task_SendNotifyDeclinedOwner" name="Send declined notification (owner)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R23</bpmn:incoming>
+      <bpmn:outgoing>R24</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R24" sourceRef="Task_SendNotifyDeclinedOwner" targetRef="End_Banned" />
+
+    <bpmn:endEvent id="End_Banned" name="Banned">
+      <bpmn:incoming>R24</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ====== REJECT PATH (admin) ====== -->
+    <bpmn:serviceTask id="Task_RejectComplaint" name="Reject complaint"
+                      camunda:delegateExpression="${rejectComplaintDelegate}">
+      <bpmn:incoming>R_REJECT</bpmn:incoming>
+      <bpmn:outgoing>R25</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R25" sourceRef="Task_RejectComplaint" targetRef="Task_PrepareNotifyRejectedGuest" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyRejectedGuest" name="Prepare rejected notification (guest)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_REJECTED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R25</bpmn:incoming>
+      <bpmn:outgoing>R26</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R26" sourceRef="Task_PrepareNotifyRejectedGuest" targetRef="Task_SendNotifyRejectedGuest" />
+
+    <bpmn:serviceTask id="Task_SendNotifyRejectedGuest" name="Send rejected notification (guest)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R26</bpmn:incoming>
+      <bpmn:outgoing>R27</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R27" sourceRef="Task_SendNotifyRejectedGuest" targetRef="Task_PrepareNotifyRejectedOwner" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyRejectedOwner" name="Prepare rejected notification (owner)"
+                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_REJECTED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R27</bpmn:incoming>
+      <bpmn:outgoing>R28</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R28" sourceRef="Task_PrepareNotifyRejectedOwner" targetRef="Task_SendNotifyRejectedOwner" />
+
+    <bpmn:serviceTask id="Task_SendNotifyRejectedOwner" name="Send rejected notification (owner)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R28</bpmn:incoming>
+      <bpmn:outgoing>R29</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="R29" sourceRef="Task_SendNotifyRejectedOwner" targetRef="End_ComplaintRejected" />
+
+    <bpmn:endEvent id="End_ComplaintRejected" name="Complaint rejected">
+      <bpmn:incoming>R29</bpmn:incoming>
+    </bpmn:endEvent>
+
+  </bpmn:process>
+</bpmn:definitions>

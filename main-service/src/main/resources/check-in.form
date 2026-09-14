@@ -1,0 +1,15 @@
+{
+  "id": "check-in",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "Подтверждаю заезд",
+      "type": "checkbox",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_confirm",
+      "key": "checkInConfirm",
+      "validate": { "required": true }
+    }
+  ],
+  "type": "default"
+}

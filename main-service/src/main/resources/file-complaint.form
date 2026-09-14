@@ -1,0 +1,22 @@
+{
+  "id": "file-complaint",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "Причина жалобы",
+      "type": "textarea",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_reason",
+      "key": "reason",
+      "validate": { "required": true }
+    },
+    {
+      "label": "Комментарий",
+      "type": "textarea",
+      "layout": { "row": "Row_2", "columns": null },
+      "id": "Field_comment",
+      "key": "ownerComment"
+    }
+  ],
+  "type": "default"
+}

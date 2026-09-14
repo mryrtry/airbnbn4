@@ -1,0 +1,22 @@
+{
+  "id": "confirm-delete",
+  "schemaVersion": 16,
+  "components": [
+    {
+      "label": "Подтвердите удаление",
+      "type": "text",
+      "layout": { "row": "Row_1", "columns": null },
+      "id": "Field_text",
+      "text": "Вы уверены, что хотите удалить это объявление?"
+    },
+    {
+      "label": "Подтверждаю",
+      "type": "checkbox",
+      "layout": { "row": "Row_2", "columns": null },
+      "id": "Field_confirm",
+      "key": "confirmDelete",
+      "validate": { "required": true }
+    }
+  ],
+  "type": "default"
+}

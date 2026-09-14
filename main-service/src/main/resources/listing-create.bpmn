@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Defs_ListingCreate"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="listing-create" name="Listing Create" isExecutable="true"
+                camunda:historyTimeToLive="180">
+
+    <bpmn:startEvent id="Start_Create" name="Start">
+      <bpmn:outgoing>F0</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:sequenceFlow id="F0" sourceRef="Start_Create" targetRef="Task_InitContext" />
+
+    <bpmn:serviceTask id="Task_InitContext" name="Init user context"
+                      camunda:delegateExpression="${initUserContextDelegate}">
+      <bpmn:incoming>F0</bpmn:incoming>
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Task_FillForm" />
+
+    <bpmn:userTask id="Task_FillForm" name="Fill listing form"
+                   camunda:candidateUsers="${initiatorUserId}"
+                   camunda:formRef="create-listing"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="F2" sourceRef="Task_FillForm" targetRef="Task_SaveListing" />
+
+    <bpmn:serviceTask id="Task_SaveListing" name="Save listing"
+                      camunda:delegateExpression="${createListingDelegate}">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>F3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F3" sourceRef="Task_SaveListing" targetRef="Gw_Result" />
+
+    <bpmn:exclusiveGateway id="Gw_Result" name="Success?" default="F_Success">
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:outgoing>F_Success</bpmn:outgoing>
+      <bpmn:outgoing>F_Fail</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_Fail" sourceRef="Gw_Result" targetRef="Task_PrepareFailed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('createError') &amp;&amp; createError != null}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_Success" sourceRef="Gw_Result" targetRef="Task_PrepareCreated" />
+
+    <bpmn:serviceTask id="Task_PrepareCreated" name="Prepare created notification"
+                      camunda:delegateExpression="${prepareListingCreatedNotificationDelegate}">
+      <bpmn:incoming>F_Success</bpmn:incoming>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F4" sourceRef="Task_PrepareCreated" targetRef="Task_SendCreated" />
+
+    <bpmn:serviceTask id="Task_SendCreated" name="Send created notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F5" sourceRef="Task_SendCreated" targetRef="End_Created" />
+
+    <bpmn:endEvent id="End_Created" name="Created">
+      <bpmn:incoming>F5</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:serviceTask id="Task_PrepareFailed" name="Prepare failed notification"
+                      camunda:delegateExpression="${prepareListingFailedNotificationDelegate}">
+      <bpmn:incoming>F_Fail</bpmn:incoming>
+      <bpmn:outgoing>F6</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F6" sourceRef="Task_PrepareFailed" targetRef="Task_SendFailed" />
+
+    <bpmn:serviceTask id="Task_SendFailed" name="Send failed notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F6</bpmn:incoming>
+      <bpmn:outgoing>F7</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F7" sourceRef="Task_SendFailed" targetRef="End_Failed" />
+
+    <bpmn:endEvent id="End_Failed" name="Failed">
+      <bpmn:incoming>F7</bpmn:incoming>
+    </bpmn:endEvent>
+
+  </bpmn:process>
+</bpmn:definitions>

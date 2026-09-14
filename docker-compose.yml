@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: airbnb-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - airbnb-net
+
+  activemq:
+    image: apache/activemq-classic:5.18.3
+    container_name: airbnb-activemq
+    restart: unless-stopped
+    environment:
+      ACTIVEMQ_ADMIN_LOGIN: ${ACTIVEMQ_USER}
+      ACTIVEMQ_ADMIN_PASSWORD: ${ACTIVEMQ_PASSWORD}
+    ports:
+      - "61616:61616"
+      - "61613:61613"
+      - "8161:8161"
+    volumes:
+      - activemq_data:/opt/apache-activemq/data
+    networks:
+      - airbnb-net
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: airbnb-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - airbnb-net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: airbnb-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - airbnb-net
+
+networks:
+  airbnb-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  activemq_data:
+  pgadmin_data:

@@ -1,0 +1,67 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: main-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/airbnb
+    username: airbnb
+    password: airbnb_secret
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_schema: business
+    open-in-view: false
+
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: admin
+    password: admin
+
+camunda.bpm:
+  admin-user:
+    id: admin
+    password: admin
+    firstName: Admin
+    lastName: User
+    email: admin@airbnb.com
+  database:
+    type: postgres
+  auto-deployment-enabled: true
+  default-serialization-format: application/json
+  job-execution:
+    enabled: true
+  webapp:
+    index-redirect-enabled: true
+  generic-properties:
+    properties:
+      historyTimeToLive: 180
+  authorization:
+    enabled: true
+
+app:
+  jwt:
+    secret: "SpudEOlfJSktEta5g94MgTH7IuGqX-V9TPaxGvFb_us"
+    access-ttl-ms: 900000
+    refresh-ttl-ms: 604800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    main: DEBUG
+    org.springframework.security: DEBUG

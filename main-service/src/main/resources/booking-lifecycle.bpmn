@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Defs_BookingLifecycle"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="booking-lifecycle" name="Booking Lifecycle" isExecutable="true"
+                camunda:historyTimeToLive="180">
+
+    <bpmn:startEvent id="Start_Booking" name="Start">
+      <bpmn:outgoing>F0</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:sequenceFlow id="F0" sourceRef="Start_Booking" targetRef="Task_InitContext" />
+
+    <bpmn:serviceTask id="Task_InitContext" name="Init user context"
+                      camunda:delegateExpression="${initUserContextDelegate}">
+      <bpmn:incoming>F0</bpmn:incoming>
+      <bpmn:outgoing>F1</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Gw_ListingProvided" />
+
+    <!-- ====== GATEWAY: listingId задан? ====== -->
+    <bpmn:exclusiveGateway id="Gw_ListingProvided" name="listingId задан?" default="F_AskListing">
+      <bpmn:incoming>F1</bpmn:incoming>
+      <bpmn:outgoing>F_ListingProvided</bpmn:outgoing>
+      <bpmn:outgoing>F_AskListing</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_ListingProvided" name="Да"
+                       sourceRef="Gw_ListingProvided" targetRef="Task_CheckAvailable">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('listingId') &amp;&amp; listingId != null}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_AskListing" name="Нет"
+                       sourceRef="Gw_ListingProvided" targetRef="Task_SelectListingDates" />
+
+    <!-- ====== USER TASK: выбрать листинг и даты ====== -->
+    <bpmn:userTask id="Task_SelectListingDates" name="Выбрать листинг и даты"
+                   camunda:candidateUsers="${initiatorUserId}"
+                   camunda:formRef="select-listing"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>F_AskListing</bpmn:incoming>
+      <bpmn:outgoing>F_AfterSelect</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="F_AfterSelect" sourceRef="Task_SelectListingDates"
+                       targetRef="Task_CheckAvailable" />
+
+    <!-- ====== CHECK AVAILABLE ====== -->
+    <bpmn:serviceTask id="Task_CheckAvailable" name="Check listing available"
+                      camunda:delegateExpression="${checkBookingAvailableDelegate}">
+      <bpmn:incoming>F_ListingProvided</bpmn:incoming>
+      <bpmn:incoming>F_AfterSelect</bpmn:incoming>
+      <bpmn:outgoing>F2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F2" sourceRef="Task_CheckAvailable" targetRef="Gw_CheckAvailable" />
+
+    <bpmn:exclusiveGateway id="Gw_CheckAvailable" name="Check OK?" default="F_CheckOk">
+      <bpmn:incoming>F2</bpmn:incoming>
+      <bpmn:outgoing>F_CheckOk</bpmn:outgoing>
+      <bpmn:outgoing>F_NotFound</bpmn:outgoing>
+      <bpmn:outgoing>F_NotAvailable</bpmn:outgoing>
+      <bpmn:outgoing>F_OwnListing</bpmn:outgoing>
+      <bpmn:outgoing>F_HasActive</bpmn:outgoing>
+      <bpmn:outgoing>F_NoDates</bpmn:outgoing>
+      <bpmn:outgoing>F_InvalidDates</bpmn:outgoing>
+      <bpmn:outgoing>F_DateInPast</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_NotFound" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_NotFound">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_FOUND'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_NotAvailable" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_NotAvailable">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NOT_AVAILABLE'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_OwnListing" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_OwnListing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'OWN_LISTING'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_HasActive" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_HasActive">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'HAS_ACTIVE'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_NoDates" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_NoDates">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'NO_DATES'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_InvalidDates" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_InvalidDates">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'INVALID_DATES'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_DateInPast" sourceRef="Gw_CheckAvailable" targetRef="End_Booking_DateInPast">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${execution.hasVariable('checkError') &amp;&amp; checkError == 'DATE_IN_PAST'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_CheckOk" sourceRef="Gw_CheckAvailable" targetRef="Task_CreateBooking" />
+
+    <bpmn:endEvent id="End_Booking_NotFound" name="Not found">
+      <bpmn:incoming>F_NotFound</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Booking_NotAvailable" name="Not available">
+      <bpmn:incoming>F_NotAvailable</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Booking_OwnListing" name="Own listing">
+      <bpmn:incoming>F_OwnListing</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Booking_HasActive" name="Has active booking">
+      <bpmn:incoming>F_HasActive</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Booking_NoDates" name="No dates">
+      <bpmn:incoming>F_NoDates</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Booking_InvalidDates" name="Invalid dates">
+      <bpmn:incoming>F_InvalidDates</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="End_Booking_DateInPast" name="Date in past">
+      <bpmn:incoming>F_DateInPast</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ====== CREATE BOOKING ====== -->
+    <bpmn:serviceTask id="Task_CreateBooking" name="Create booking"
+                      camunda:delegateExpression="${createBookingDelegate}">
+      <bpmn:incoming>F_CheckOk</bpmn:incoming>
+      <bpmn:outgoing>F3</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F3" sourceRef="Task_CreateBooking" targetRef="Task_PrepareNotifyOwner" />
+
+    <!-- ====== NOTIFY OWNER (BOOKING_CREATED) ====== -->
+    <bpmn:serviceTask id="Task_PrepareNotifyOwner" name="Prepare owner notification"
+                      camunda:delegateExpression="${prepareBookingNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">BOOKING_CREATED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F3</bpmn:incoming>
+      <bpmn:outgoing>F4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F4" sourceRef="Task_PrepareNotifyOwner" targetRef="Task_SendNotifyOwner" />
+
+    <bpmn:serviceTask id="Task_SendNotifyOwner" name="Send owner notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F4</bpmn:incoming>
+      <bpmn:outgoing>F5</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F5" sourceRef="Task_SendNotifyOwner" targetRef="Task_OwnerDecide" />
+
+    <!-- ====== OWNER DECIDE ====== -->
+    <bpmn:userTask id="Task_OwnerDecide" name="Owner decide"
+                   camunda:candidateUsers="${ownerId}"
+                   camunda:formRef="owner-decide"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>F5</bpmn:incoming>
+      <bpmn:outgoing>F6</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="F6" sourceRef="Task_OwnerDecide" targetRef="Gw_Decision" />
+
+    <bpmn:exclusiveGateway id="Gw_Decision" name="Decision?" default="F_Reject">
+      <bpmn:incoming>F6</bpmn:incoming>
+      <bpmn:outgoing>F_Approve</bpmn:outgoing>
+      <bpmn:outgoing>F_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:sequenceFlow id="F_Approve" sourceRef="Gw_Decision" targetRef="Task_ConfirmBooking">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+        ${ownerDecision == 'APPROVE'}
+      </bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="F_Reject" sourceRef="Gw_Decision" targetRef="Task_RejectBooking" />
+
+    <!-- ====== REJECT PATH ====== -->
+    <bpmn:serviceTask id="Task_RejectBooking" name="Reject booking"
+                      camunda:delegateExpression="${rejectBookingDelegate}">
+      <bpmn:incoming>F_Reject</bpmn:incoming>
+      <bpmn:outgoing>F8</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F8" sourceRef="Task_RejectBooking" targetRef="Task_PrepareNotifyRejected" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyRejected" name="Prepare reject notification"
+                      camunda:delegateExpression="${prepareBookingNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">BOOKING_REJECTED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F8</bpmn:incoming>
+      <bpmn:outgoing>F9</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F9" sourceRef="Task_PrepareNotifyRejected" targetRef="Task_SendNotifyRejected" />
+
+    <bpmn:serviceTask id="Task_SendNotifyRejected" name="Send reject notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F9</bpmn:incoming>
+      <bpmn:outgoing>F10</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F10" sourceRef="Task_SendNotifyRejected" targetRef="End_Rejected" />
+
+    <bpmn:endEvent id="End_Rejected" name="Rejected">
+      <bpmn:incoming>F10</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ====== APPROVE PATH ====== -->
+    <bpmn:serviceTask id="Task_ConfirmBooking" name="Confirm booking"
+                      camunda:delegateExpression="${confirmBookingDelegate}">
+      <bpmn:incoming>F_Approve</bpmn:incoming>
+      <bpmn:outgoing>F11</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F11" sourceRef="Task_ConfirmBooking" targetRef="Task_PrepareNotifyApproved" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyApproved" name="Prepare approve notification"
+                      camunda:delegateExpression="${prepareBookingNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">BOOKING_APPROVED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F11</bpmn:incoming>
+      <bpmn:outgoing>F12</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F12" sourceRef="Task_PrepareNotifyApproved" targetRef="Task_SendNotifyApproved" />
+
+    <bpmn:serviceTask id="Task_SendNotifyApproved" name="Send approve notification"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F12</bpmn:incoming>
+      <bpmn:outgoing>F13</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F13" sourceRef="Task_SendNotifyApproved" targetRef="Task_CheckIn" />
+
+    <!-- ====== CHECK-IN ====== -->
+    <bpmn:userTask id="Task_CheckIn" name="Check-in"
+                   camunda:candidateUsers="${guestId}"
+                   camunda:formRef="check-in"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>F13</bpmn:incoming>
+      <bpmn:outgoing>F14</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="F14" sourceRef="Task_CheckIn" targetRef="Task_RegisterCheckIn" />
+
+    <bpmn:serviceTask id="Task_RegisterCheckIn" name="Register check-in"
+                      camunda:delegateExpression="${checkInDelegate}">
+      <bpmn:incoming>F14</bpmn:incoming>
+      <bpmn:outgoing>F15a</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F15a" sourceRef="Task_RegisterCheckIn" targetRef="Task_PrepareNotifyCheckInGuest" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyCheckInGuest" name="Prepare check-in notification (guest)"
+                      camunda:delegateExpression="${prepareBookingNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">BOOKING_CHECKED_IN</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F15a</bpmn:incoming>
+      <bpmn:outgoing>F15b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F15b" sourceRef="Task_PrepareNotifyCheckInGuest" targetRef="Task_SendNotifyCheckInGuest" />
+
+    <bpmn:serviceTask id="Task_SendNotifyCheckInGuest" name="Send check-in notification (guest)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F15b</bpmn:incoming>
+      <bpmn:outgoing>F15c</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F15c" sourceRef="Task_SendNotifyCheckInGuest" targetRef="Task_PrepareNotifyCheckInOwner" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyCheckInOwner" name="Prepare check-in notification (owner)"
+                      camunda:delegateExpression="${prepareBookingNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">BOOKING_CHECKED_IN</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F15c</bpmn:incoming>
+      <bpmn:outgoing>F15d</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F15d" sourceRef="Task_PrepareNotifyCheckInOwner" targetRef="Task_SendNotifyCheckInOwner" />
+
+    <bpmn:serviceTask id="Task_SendNotifyCheckInOwner" name="Send check-in notification (owner)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F15d</bpmn:incoming>
+      <bpmn:outgoing>F16</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F16" sourceRef="Task_SendNotifyCheckInOwner" targetRef="Task_CheckOut" />
+
+    <!-- ====== CHECK-OUT ====== -->
+    <bpmn:userTask id="Task_CheckOut" name="Check-out"
+                   camunda:candidateUsers="${guestId}"
+                   camunda:formRef="check-out"
+                   camunda:formRefBinding="latest">
+      <bpmn:incoming>F16</bpmn:incoming>
+      <bpmn:outgoing>F17</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:sequenceFlow id="F17" sourceRef="Task_CheckOut" targetRef="Task_RegisterCheckOut" />
+
+    <bpmn:serviceTask id="Task_RegisterCheckOut" name="Register check-out"
+                      camunda:delegateExpression="${checkOutDelegate}">
+      <bpmn:incoming>F17</bpmn:incoming>
+      <bpmn:outgoing>F17a</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ====== START RESOLUTION PROCESS ====== -->
+    <bpmn:sequenceFlow id="F17a" sourceRef="Task_RegisterCheckOut" targetRef="Task_StartResolution" />
+
+    <bpmn:serviceTask id="Task_StartResolution" name="Start resolution process"
+                      camunda:delegateExpression="${startResolutionDelegate}">
+      <bpmn:incoming>F17a</bpmn:incoming>
+      <bpmn:outgoing>F18a</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- NOTIFY GUEST (check-out) -->
+    <bpmn:sequenceFlow id="F18a" sourceRef="Task_StartResolution" targetRef="Task_PrepareNotifyCheckOutGuest" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyCheckOutGuest" name="Prepare check-out notification (guest)"
+                      camunda:delegateExpression="${prepareBookingNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">BOOKING_CHECKED_OUT</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F18a</bpmn:incoming>
+      <bpmn:outgoing>F18b</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F18b" sourceRef="Task_PrepareNotifyCheckOutGuest" targetRef="Task_SendNotifyCheckOutGuest" />
+
+    <bpmn:serviceTask id="Task_SendNotifyCheckOutGuest" name="Send check-out notification (guest)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F18b</bpmn:incoming>
+      <bpmn:outgoing>F18c</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- NOTIFY OWNER (check-out) -->
+    <bpmn:sequenceFlow id="F18c" sourceRef="Task_SendNotifyCheckOutGuest" targetRef="Task_PrepareNotifyCheckOutOwner" />
+
+    <bpmn:serviceTask id="Task_PrepareNotifyCheckOutOwner" name="Prepare check-out notification (owner)"
+                      camunda:delegateExpression="${prepareBookingNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">BOOKING_CHECKED_OUT</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>F18c</bpmn:incoming>
+      <bpmn:outgoing>F18d</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F18d" sourceRef="Task_PrepareNotifyCheckOutOwner" targetRef="Task_SendNotifyCheckOutOwner" />
+
+    <bpmn:serviceTask id="Task_SendNotifyCheckOutOwner" name="Send check-out notification (owner)"
+                      camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>F18d</bpmn:incoming>
+      <bpmn:outgoing>F21</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="F21" sourceRef="Task_SendNotifyCheckOutOwner" targetRef="End_Completed" />
+
+    <bpmn:endEvent id="End_Completed" name="Completed">
+      <bpmn:incoming>F21</bpmn:incoming>
+    </bpmn:endEvent>
+
+  </bpmn:process>
+</bpmn:definitions>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-application
+        xmlns="http://www.camunda.org/schema/1.0/ProcessApplication">
+
+    <process-archive name="main-service">
+        <process-engine>default</process-engine>
+
+        <resource>listing-create.bpmn</resource>
+        <resource>create-listing.form</resource>
+
+        <resource>listing-update.bpmn</resource>
+        <resource>edit-listing.form</resource>
+        <resource>select-listing.form</resource>
+
+        <resource>listing-delete.bpmn</resource>
+        <resource>confirm-delete.form</resource>
+
+        <resource>booking-lifecycle.bpmn</resource>
+        <resource>owner-decide.form</resource>
+        <resource>check-in.form</resource>
+        <resource>check-out.form</resource>
+
+        <resource>resolution-lifecycle.bpmn</resource>
+        <resource>file-complaint.form</resource>
+        <resource>resolution-decide.form</resource>
+        <resource>resolution-pay.form</resource>
+
+        <resource>permissions.dmn</resource>
+
+        <properties>
+            <property name="isDeleteUponUndeploy">false</property>
+            <property name="isScanForProcessDefinitions">false</property>
+        </properties>
+    </process-archive>
+
+</process-application>
