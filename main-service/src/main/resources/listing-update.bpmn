@@ -5,7 +5,7 @@
                   id="Defs_ListingUpdate"
                   targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="listing-update" name="Listing Update" isExecutable="true"
+  <bpmn:process id="listing-update" name="Редактирование объявления" isExecutable="true"
                 camunda:historyTimeToLive="180">
 
     <bpmn:startEvent id="Start_Update" name="Start">
@@ -49,7 +49,7 @@
 
     <bpmn:userTask id="Task_SelectListing" name="Выбор объявления"
                    camunda:candidateGroups="OWNER"
-                   camunda:formRef="select-listing"
+                   camunda:formRef="edit-listing"
                    camunda:formRefBinding="latest">
       <bpmn:incoming>F_AskListing_b</bpmn:incoming>
       <bpmn:outgoing>F2_AfterSelect</bpmn:outgoing>

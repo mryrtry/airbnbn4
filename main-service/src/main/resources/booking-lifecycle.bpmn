@@ -58,7 +58,6 @@
     <bpmn:sequenceFlow id="F_AfterSelect" sourceRef="Task_SelectListingDates"
                        targetRef="Task_CheckAvailable" />
 
-    <!-- ====== CHECK AVAILABLE ====== -->
     <bpmn:serviceTask id="Task_CheckAvailable" name="Check listing available"
                       camunda:delegateExpression="${checkBookingAvailableDelegate}">
       <bpmn:incoming>F_ListingProvided</bpmn:incoming>
