@@ -6,7 +6,7 @@
       "type": "text",
       "label": "Информация",
       "id": "InfoHeader",
-      "text": "Выберите объявление и укажите даты бронирования. Даты — в формате YYYY-MM-DD."
+      "text": "Выберите объявление."
     },
     {
       "type": "textarea",
@@ -22,26 +22,6 @@
       "id": "Field_listingId",
       "key": "listingId",
       "validate": { "required": true, "min": 1, "max": 999999 }
-    },
-    {
-      "type": "textfield",
-      "label": "Дата заезда (YYYY-MM-DD)",
-      "id": "Field_start",
-      "key": "bookingStart",
-      "validate": {
-        "required": false,
-        "pattern": "^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
-      }
-    },
-    {
-      "type": "textfield",
-      "label": "Дата выезда (YYYY-MM-DD)",
-      "id": "Field_end",
-      "key": "bookingEnd",
-      "validate": {
-        "required": false,
-        "pattern": "^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
-      }
     }
   ],
   "type": "default"

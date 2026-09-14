@@ -11,6 +11,7 @@
         <resource>listing-update.bpmn</resource>
         <resource>edit-listing.form</resource>
         <resource>select-listing.form</resource>
+        <resource>create-booking.form</resource>
 
         <resource>listing-delete.bpmn</resource>
         <resource>confirm-delete.form</resource>

@@ -38,7 +38,6 @@
     <bpmn:sequenceFlow id="F_AskListing" name="Нет"
                        sourceRef="Gw_ListingProvided" targetRef="Task_PrepareBookingForm_Select" />
 
-    <!-- ====== PREPARE FORM (select-listing) ====== -->
     <bpmn:serviceTask id="Task_PrepareBookingForm_Select" name="Prepare booking form (select)"
                       camunda:delegateExpression="${prepareBookingFormDelegate}">
       <bpmn:incoming>F_AskListing</bpmn:incoming>
@@ -50,7 +49,7 @@
 
     <bpmn:userTask id="Task_SelectListingDates" name="Выбор объявления и дат"
                    camunda:candidateUsers="${initiatorUserId}"
-                   camunda:formRef="select-listing"
+                   camunda:formRef="create-booking"
                    camunda:formRefBinding="latest">
       <bpmn:incoming>F_PrepareSelect</bpmn:incoming>
       <bpmn:outgoing>F_AfterSelect</bpmn:outgoing>
