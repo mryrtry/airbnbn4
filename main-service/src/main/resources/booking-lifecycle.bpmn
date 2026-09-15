@@ -5,7 +5,7 @@
                   id="Defs_BookingLifecycle"
                   targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="booking-lifecycle" name="Booking Lifecycle" isExecutable="true"
+  <bpmn:process id="booking-lifecycle" name="Букинг" isExecutable="true"
                 camunda:historyTimeToLive="180">
 
     <bpmn:startEvent id="Start_Booking" name="Start">

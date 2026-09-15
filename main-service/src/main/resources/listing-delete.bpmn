@@ -5,7 +5,7 @@
                   id="Defs_ListingDelete"
                   targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="listing-delete" name="Listing Delete" isExecutable="true"
+  <bpmn:process id="listing-delete" name="Удалить листинг" isExecutable="true"
                 camunda:historyTimeToLive="180">
 
     <bpmn:startEvent id="Start_Delete" name="Start">

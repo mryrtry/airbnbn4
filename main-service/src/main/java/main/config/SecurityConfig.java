@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/lib/**", "/app/**", "/assets/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/", "/*.html").permitAll()
-                        .requestMatchers("/engine-rest/**").hasRole("ADMIN")
+                        .requestMatchers("/engine-rest/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

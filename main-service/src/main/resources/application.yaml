@@ -11,7 +11,7 @@ spring:
     name: main-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/airbnb
+    url: jdbc:postgresql://localhost:5432/airbnb
     username: airbnb
     password: airbnb_secret
     driver-class-name: org.postgresql.Driver

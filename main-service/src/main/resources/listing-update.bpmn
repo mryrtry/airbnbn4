@@ -5,7 +5,7 @@
                   id="Defs_ListingUpdate"
                   targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="listing-update" name="Редактирование объявления" isExecutable="true"
+  <bpmn:process id="listing-update" name="Редактировать листинг" isExecutable="true"
                 camunda:historyTimeToLive="180">
 
     <bpmn:startEvent id="Start_Update" name="Start">
@@ -20,36 +20,10 @@
       <bpmn:outgoing>F1</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Task_CheckOwnerAvailableListings" />
-
-    <bpmn:serviceTask id="Task_CheckOwnerAvailableListings" name="Проверка доступных объявлений"
-                      camunda:delegateExpression="${checkOwnerAvailableListingsDelegate}">
-      <bpmn:incoming>F1</bpmn:incoming>
-      <bpmn:outgoing>F1_CheckAvailable</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="F1_CheckAvailable" sourceRef="Task_CheckOwnerAvailableListings"
-                       targetRef="Gw_HasAvailableListings" />
-
-    <bpmn:exclusiveGateway id="Gw_HasAvailableListings" name="Есть доступные объявления?"
-                           default="F_NoAvailableListings">
-      <bpmn:incoming>F1_CheckAvailable</bpmn:incoming>
-      <bpmn:outgoing>F_HasAvailableListings</bpmn:outgoing>
-      <bpmn:outgoing>F_NoAvailableListings</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-
-    <bpmn:sequenceFlow id="F_HasAvailableListings" name="Да"
-                       sourceRef="Gw_HasAvailableListings" targetRef="Gw_ListingIdProvided">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
-        ${hasAvailableListings}
-      </bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-
-    <bpmn:sequenceFlow id="F_NoAvailableListings" name="Нет"
-                       sourceRef="Gw_HasAvailableListings" targetRef="Task_PrepareBusinessError" />
+    <bpmn:sequenceFlow id="F1" sourceRef="Task_InitContext" targetRef="Gw_ListingIdProvided" />
 
     <bpmn:exclusiveGateway id="Gw_ListingIdProvided" name="listingId задан?" default="F_AskListing">
-      <bpmn:incoming>F_HasAvailableListings</bpmn:incoming>
+      <bpmn:incoming>F1</bpmn:incoming>
       <bpmn:outgoing>F_ListingIdProvided</bpmn:outgoing>
       <bpmn:outgoing>F_AskListing</bpmn:outgoing>
     </bpmn:exclusiveGateway>
@@ -175,7 +149,6 @@
 
     <bpmn:serviceTask id="Task_PrepareBusinessError" name="Подготовка уведомления об ошибке"
                       camunda:delegateExpression="${prepareBusinessErrorNotificationDelegate}">
-      <bpmn:incoming>F_NoAvailableListings</bpmn:incoming>
       <bpmn:incoming>F_NotFound</bpmn:incoming>
       <bpmn:incoming>F_NotOwner</bpmn:incoming>
       <bpmn:incoming>F_NotAvailable</bpmn:incoming>

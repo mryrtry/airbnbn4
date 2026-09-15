@@ -5,7 +5,7 @@
                   id="Defs_ResolutionLifecycle"
                   targetNamespace="http://bpmn.io/schema/bpmn">
 
-  <bpmn:process id="resolution-lifecycle" name="Resolution Lifecycle" isExecutable="true"
+  <bpmn:process id="resolution-lifecycle" name="Резолюции" isExecutable="true"
                 camunda:historyTimeToLive="180">
 
     <bpmn:startEvent id="Start_Resolution" name="Start">
