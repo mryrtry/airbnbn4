@@ -10,7 +10,6 @@
   <bpmn:process id="listing-update" name="Редактировать листинг" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_ListingUpdate">
       <bpmn:lane id="Lane_System" name="Система">
-        <bpmn:flowNodeRef>Start_Update</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_InitContext</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CheckOwnerAvailableListings</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gw_HasAvailableListings</bpmn:flowNodeRef>
@@ -30,11 +29,9 @@
       <bpmn:lane id="Lane_Owner" name="Владелец">
         <bpmn:flowNodeRef>Task_SelectListing</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_EditForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Update</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="Start_Update" name="Старт">
-      <bpmn:outgoing>F0</bpmn:outgoing>
-    </bpmn:startEvent>
     <bpmn:serviceTask id="Task_InitContext" name="Инициализация контекста пользователя" camunda:delegateExpression="${initUserContextDelegate}">
       <bpmn:incoming>F0</bpmn:incoming>
       <bpmn:outgoing>F1</bpmn:outgoing>
@@ -146,6 +143,9 @@
       <bpmn:incoming>F3b</bpmn:incoming>
       <bpmn:outgoing>F4</bpmn:outgoing>
     </bpmn:userTask>
+    <bpmn:startEvent id="Start_Update" name="Старт">
+      <bpmn:outgoing>F0</bpmn:outgoing>
+    </bpmn:startEvent>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_18rwx83">
@@ -157,12 +157,6 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
         <dc:Bounds x="188" y="70" width="1730" height="410" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Start_Update_di" bpmnElement="Start_Update">
-        <dc:Bounds x="210" y="122" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="213" y="165" width="30" height="14" />
-        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_InitContext_di" bpmnElement="Task_InitContext">
         <dc:Bounds x="300" y="100" width="100" height="80" />
@@ -233,8 +227,15 @@
       <bpmndi:BPMNShape id="Task_EditForm_di" bpmnElement="Task_EditForm">
         <dc:Bounds x="1210" y="510" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Update_di" bpmnElement="Start_Update">
+        <dc:Bounds x="232" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="235" y="565" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="F0_di" bpmnElement="F0">
-        <di:waypoint x="246" y="140" />
+        <di:waypoint x="250" y="522" />
+        <di:waypoint x="250" y="140" />
         <di:waypoint x="300" y="140" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">

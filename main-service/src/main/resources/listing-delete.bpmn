@@ -13,9 +13,9 @@
       <bpmn:lane id="Lane_Owner" name="Владелец">
         <bpmn:flowNodeRef>Task_SelectListing</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_ConfirmDelete</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Delete</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_System" name="Система">
-        <bpmn:flowNodeRef>Start_Delete</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_InitContext</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_CheckOwnerAvailableListings</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Gw_HasAvailableListings</bpmn:flowNodeRef>
@@ -44,9 +44,6 @@
       <bpmn:incoming>F_CheckOk_b</bpmn:incoming>
       <bpmn:outgoing>F3</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:startEvent id="Start_Delete" name="Старт">
-      <bpmn:outgoing>F0</bpmn:outgoing>
-    </bpmn:startEvent>
     <bpmn:serviceTask id="Task_InitContext" name="Инициализация контекста" camunda:delegateExpression="${initUserContextDelegate}">
       <bpmn:incoming>F0</bpmn:incoming>
       <bpmn:outgoing>F1</bpmn:outgoing>
@@ -167,6 +164,9 @@
       <bpmn:incoming>F_CancelPrepared</bpmn:incoming>
       <bpmn:outgoing>F_CancelSent</bpmn:outgoing>
     </bpmn:serviceTask>
+    <bpmn:startEvent id="Start_Delete" name="Старт">
+      <bpmn:outgoing>F0</bpmn:outgoing>
+    </bpmn:startEvent>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0hr26ek">
@@ -184,12 +184,6 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_ConfirmDelete_di" bpmnElement="Task_ConfirmDelete">
         <dc:Bounds x="1060" y="480" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Start_Delete_di" bpmnElement="Start_Delete">
-        <dc:Bounds x="210" y="142" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="213" y="185" width="30" height="14" />
-        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_InitContext_di" bpmnElement="Task_InitContext">
         <dc:Bounds x="300" y="120" width="100" height="80" />
@@ -269,6 +263,12 @@
       <bpmndi:BPMNShape id="Task_SendCancelledNotify_di" bpmnElement="Task_SendCancelledNotify">
         <dc:Bounds x="1700" y="230" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Delete_di" bpmnElement="Start_Delete">
+        <dc:Bounds x="242" y="502" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="245" y="545" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="F_AskListing_b_di" bpmnElement="F_AskListing_b">
         <di:waypoint x="725" y="310" />
         <di:waypoint x="725" y="480" />
@@ -304,7 +304,8 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="F0_di" bpmnElement="F0">
-        <di:waypoint x="246" y="160" />
+        <di:waypoint x="260" y="502" />
+        <di:waypoint x="260" y="160" />
         <di:waypoint x="300" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">

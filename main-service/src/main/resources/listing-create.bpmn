@@ -11,7 +11,6 @@
   <bpmn:process id="listing-create" name="Создать листинг" isExecutable="true" camunda:historyTimeToLive="180">
     <bpmn:laneSet id="LaneSet_ListingCreate">
       <bpmn:lane id="Lane_System" name="Система">
-        <bpmn:flowNodeRef>Start_Create</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_InitContext</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_PrepareListingForm</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_SaveListing</bpmn:flowNodeRef>
@@ -25,11 +24,9 @@
       </bpmn:lane>
       <bpmn:lane id="Lane_Owner" name="Владелец">
         <bpmn:flowNodeRef>Task_FillForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Start_Create</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
-    <bpmn:startEvent id="Start_Create" name="Старт">
-      <bpmn:outgoing>F0</bpmn:outgoing>
-    </bpmn:startEvent>
     <bpmn:serviceTask id="Task_InitContext" name="Инициализация контекста пользователя" camunda:delegateExpression="${initUserContextDelegate}">
       <bpmn:incoming>F0</bpmn:incoming>
       <bpmn:outgoing>F1</bpmn:outgoing>
@@ -88,6 +85,9 @@
       <bpmn:incoming>F6</bpmn:incoming>
       <bpmn:outgoing>F7</bpmn:outgoing>
     </bpmn:serviceTask>
+    <bpmn:startEvent id="Start_Create" name="Старт">
+      <bpmn:outgoing>F0</bpmn:outgoing>
+    </bpmn:startEvent>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_10irw0b">
@@ -99,12 +99,6 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
         <dc:Bounds x="188" y="80" width="1132" height="320" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Start_Create_di" bpmnElement="Start_Create">
-        <dc:Bounds x="210" y="222" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="213" y="265" width="30" height="14" />
-        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_InitContext_di" bpmnElement="Task_InitContext">
         <dc:Bounds x="300" y="200" width="100" height="80" />
@@ -148,8 +142,15 @@
       <bpmndi:BPMNShape id="Task_SendFailed_di" bpmnElement="Task_SendFailed">
         <dc:Bounds x="1100" y="300" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Create_di" bpmnElement="Start_Create">
+        <dc:Bounds x="232" y="432" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="235" y="475" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="F0_di" bpmnElement="F0">
-        <di:waypoint x="246" y="240" />
+        <di:waypoint x="250" y="432" />
+        <di:waypoint x="250" y="240" />
         <di:waypoint x="300" y="240" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="F1_di" bpmnElement="F1">
