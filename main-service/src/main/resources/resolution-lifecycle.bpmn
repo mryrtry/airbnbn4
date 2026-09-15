@@ -1,29 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  id="Defs_ResolutionLifecycle"
-                  targetNamespace="http://bpmn.io/schema/bpmn">
-
-  <bpmn:process id="resolution-lifecycle" name="Резолюции" isExecutable="true"
-                camunda:historyTimeToLive="180">
-
-    <bpmn:startEvent id="Start_Resolution" name="Start">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_ResolutionLifecycle" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.28.0">
+  <bpmn:collaboration id="Collab_Resolution">
+    <bpmn:participant id="Participant_Airbnb" name="Airbnb" processRef="resolution-lifecycle" />
+  </bpmn:collaboration>
+  <bpmn:process id="resolution-lifecycle" name="Резолюции" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:laneSet id="LaneSet_Resolution">
+      <bpmn:lane id="Lane_System" name="Система">
+        <bpmn:flowNodeRef>Start_Resolution</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateWindow</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyWindowOpened</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyWindowOpened</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareResolutionForm_File</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegisterComplaint</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyComplaintFiled</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyComplaintFiled</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareResolutionForm_Admin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_AdminDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ApproveComplaint</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RejectComplaint</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyRejectedGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyRejectedGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyRejectedOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyRejectedOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ComplaintRejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyApprovedGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyApprovedGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyApprovedOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyApprovedOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareResolutionForm_Pay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gw_UserDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_RegisterPayment</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyPaidGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyPaidGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyPaidOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyPaidOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Paid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_BanUser</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyDeclinedGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyDeclinedGuest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyDeclinedOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyDeclinedOwner</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Banned</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CloseWindowExpired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrepareNotifyExpired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendNotifyExpired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_WindowExpired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Timer_WindowExpire</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Admin" name="Админ">
+        <bpmn:flowNodeRef>Task_AdminReview</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Owner" name="Владелец">
+        <bpmn:flowNodeRef>Task_OwnerFileComplaint</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Guest" name="Гость">
+        <bpmn:flowNodeRef>Task_UserPay</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_Resolution" name="Старт">
       <bpmn:outgoing>R0</bpmn:outgoing>
     </bpmn:startEvent>
-
-    <bpmn:sequenceFlow id="R0" sourceRef="Start_Resolution" targetRef="Task_CreateWindow" />
-
-    <bpmn:serviceTask id="Task_CreateWindow" name="Create resolution window"
-                      camunda:delegateExpression="${createResolutionWindowDelegate}">
+    <bpmn:serviceTask id="Task_CreateWindow" name="Создание окна резолюции" camunda:delegateExpression="${createResolutionWindowDelegate}">
       <bpmn:incoming>R0</bpmn:incoming>
       <bpmn:outgoing>R1</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R1" sourceRef="Task_CreateWindow" targetRef="Task_PrepareNotifyWindowOpened" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyWindowOpened" name="Prepare window-opened notification"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+    <bpmn:serviceTask id="Task_PrepareNotifyWindowOpened" name="Подготовка уведомления об открытии окна" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
       <bpmn:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="notificationType">RESOLUTION_WINDOW_OPENED</camunda:inputParameter>
@@ -33,91 +74,23 @@
       <bpmn:incoming>R1</bpmn:incoming>
       <bpmn:outgoing>R2</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R2" sourceRef="Task_PrepareNotifyWindowOpened" targetRef="Task_SendNotifyWindowOpened" />
-
-    <bpmn:serviceTask id="Task_SendNotifyWindowOpened" name="Send window-opened notification"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
+    <bpmn:serviceTask id="Task_SendNotifyWindowOpened" name="Отправка уведомления об открытии окна" camunda:delegateExpression="${sendNotificationDelegate}">
       <bpmn:incoming>R2</bpmn:incoming>
       <bpmn:outgoing>R3</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <!-- ====== PREPARE FORM (file-complaint) ====== -->
-    <bpmn:sequenceFlow id="R3" sourceRef="Task_SendNotifyWindowOpened" targetRef="Task_PrepareResolutionForm_File" />
-
-    <bpmn:serviceTask id="Task_PrepareResolutionForm_File" name="Prepare resolution form (file)"
-                      camunda:delegateExpression="${prepareResolutionFormDelegate}">
+    <bpmn:serviceTask id="Task_PrepareResolutionForm_File" name="Подготовка формы резолюции (подача)" camunda:delegateExpression="${prepareResolutionFormDelegate}">
       <bpmn:incoming>R3</bpmn:incoming>
       <bpmn:outgoing>R3b</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R3b" sourceRef="Task_PrepareResolutionForm_File" targetRef="Task_OwnerFileComplaint" />
-
-    <bpmn:userTask id="Task_OwnerFileComplaint" name="Подача жалобы"
-                   camunda:candidateUsers="${ownerId}"
-                   camunda:formRef="file-complaint"
-                   camunda:formRefBinding="latest">
+    <bpmn:userTask id="Task_OwnerFileComplaint" name="Подача жалобы" camunda:candidateUsers="${ownerId}" camunda:formRef="file-complaint" camunda:formRefBinding="latest">
       <bpmn:incoming>R3b</bpmn:incoming>
       <bpmn:outgoing>R4</bpmn:outgoing>
     </bpmn:userTask>
-
-    <bpmn:boundaryEvent id="Timer_WindowExpire" name="Окно истекло"
-                        attachedToRef="Task_OwnerFileComplaint" cancelActivity="true">
-      <bpmn:outgoing>R_TIMEOUT</bpmn:outgoing>
-      <bpmn:timerEventDefinition>
-        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration>
-      </bpmn:timerEventDefinition>
-    </bpmn:boundaryEvent>
-
-    <bpmn:sequenceFlow id="R_TIMEOUT" sourceRef="Timer_WindowExpire" targetRef="Task_CloseWindowExpired" />
-
-    <bpmn:serviceTask id="Task_CloseWindowExpired" name="Close window (expired)"
-                      camunda:delegateExpression="${closeResolutionWindowExpiredDelegate}">
-      <bpmn:incoming>R_TIMEOUT</bpmn:incoming>
-      <bpmn:outgoing>R_TIMEOUT2</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R_TIMEOUT2" sourceRef="Task_CloseWindowExpired" targetRef="Task_PrepareNotifyExpired" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyExpired" name="Prepare expired notification"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="notificationType">RESOLUTION_WINDOW_EXPIRED</camunda:inputParameter>
-          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>R_TIMEOUT2</bpmn:incoming>
-      <bpmn:outgoing>R_TIMEOUT3</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R_TIMEOUT3" sourceRef="Task_PrepareNotifyExpired" targetRef="Task_SendNotifyExpired" />
-
-    <bpmn:serviceTask id="Task_SendNotifyExpired" name="Send expired notification"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
-      <bpmn:incoming>R_TIMEOUT3</bpmn:incoming>
-      <bpmn:outgoing>R_TIMEOUT4</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R_TIMEOUT4" sourceRef="Task_SendNotifyExpired" targetRef="End_WindowExpired" />
-
-    <bpmn:endEvent id="End_WindowExpired" name="Window expired">
-      <bpmn:incoming>R_TIMEOUT4</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <!-- ====== COMPLAINT FILED → ADMIN REVIEW ====== -->
-    <bpmn:sequenceFlow id="R4" sourceRef="Task_OwnerFileComplaint" targetRef="Task_RegisterComplaint" />
-
-    <bpmn:serviceTask id="Task_RegisterComplaint" name="Register complaint"
-                      camunda:delegateExpression="${registerComplaintDelegate}">
+    <bpmn:serviceTask id="Task_RegisterComplaint" name="Регистрация жалобы" camunda:delegateExpression="${registerComplaintDelegate}">
       <bpmn:incoming>R4</bpmn:incoming>
       <bpmn:outgoing>R5</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R5" sourceRef="Task_RegisterComplaint" targetRef="Task_PrepareNotifyComplaintFiled" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyComplaintFiled" name="Prepare complaint-filed notification"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+    <bpmn:serviceTask id="Task_PrepareNotifyComplaintFiled" name="Подготовка уведомления о подаче жалобы" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
       <bpmn:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="notificationType">RESOLUTION_FILED</camunda:inputParameter>
@@ -127,261 +100,32 @@
       <bpmn:incoming>R5</bpmn:incoming>
       <bpmn:outgoing>R6</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R6" sourceRef="Task_PrepareNotifyComplaintFiled" targetRef="Task_SendNotifyComplaintFiled" />
-
-    <bpmn:serviceTask id="Task_SendNotifyComplaintFiled" name="Send complaint-filed notification"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
+    <bpmn:serviceTask id="Task_SendNotifyComplaintFiled" name="Отправка уведомления о подаче жалобы" camunda:delegateExpression="${sendNotificationDelegate}">
       <bpmn:incoming>R6</bpmn:incoming>
       <bpmn:outgoing>R7</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <!-- ====== PREPARE FORM (admin-review) ====== -->
-    <bpmn:sequenceFlow id="R7" sourceRef="Task_SendNotifyComplaintFiled" targetRef="Task_PrepareResolutionForm_Admin" />
-
-    <bpmn:serviceTask id="Task_PrepareResolutionForm_Admin" name="Prepare resolution form (admin)"
-                      camunda:delegateExpression="${prepareResolutionFormDelegate}">
+    <bpmn:serviceTask id="Task_PrepareResolutionForm_Admin" name="Подготовка формы резолюции (админ)" camunda:delegateExpression="${prepareResolutionFormDelegate}">
       <bpmn:incoming>R7</bpmn:incoming>
       <bpmn:outgoing>R7b</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R7b" sourceRef="Task_PrepareResolutionForm_Admin" targetRef="Task_AdminReview" />
-
-    <bpmn:userTask id="Task_AdminReview" name="Рассмотрение жалобы"
-                   camunda:candidateGroups="ADMIN"
-                   camunda:formRef="resolution-decide"
-                   camunda:formRefBinding="latest">
+    <bpmn:userTask id="Task_AdminReview" name="Рассмотрение жалобы" camunda:candidateGroups="ADMIN" camunda:formRef="resolution-decide" camunda:formRefBinding="latest">
       <bpmn:incoming>R7b</bpmn:incoming>
       <bpmn:outgoing>R8</bpmn:outgoing>
     </bpmn:userTask>
-
-    <bpmn:sequenceFlow id="R8" sourceRef="Task_AdminReview" targetRef="Gw_AdminDecision" />
-
-    <bpmn:exclusiveGateway id="Gw_AdminDecision" name="Admin decision?" default="R_REJECT">
+    <bpmn:exclusiveGateway id="Gw_AdminDecision" name="Решение администратора?" default="R_REJECT">
       <bpmn:incoming>R8</bpmn:incoming>
       <bpmn:outgoing>R_APPROVE</bpmn:outgoing>
       <bpmn:outgoing>R_REJECT</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-
-    <bpmn:sequenceFlow id="R_APPROVE" sourceRef="Gw_AdminDecision" targetRef="Task_ApproveComplaint">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
-        ${adminDecision == 'APPROVE'}
-      </bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-
-    <bpmn:sequenceFlow id="R_REJECT" sourceRef="Gw_AdminDecision" targetRef="Task_RejectComplaint" />
-
-    <!-- ====== APPROVE PATH ====== -->
-    <bpmn:serviceTask id="Task_ApproveComplaint" name="Approve complaint"
-                      camunda:delegateExpression="${approveComplaintDelegate}">
+    <bpmn:serviceTask id="Task_ApproveComplaint" name="Одобрение жалобы" camunda:delegateExpression="${approveComplaintDelegate}">
       <bpmn:incoming>R_APPROVE</bpmn:incoming>
       <bpmn:outgoing>R9</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R9" sourceRef="Task_ApproveComplaint" targetRef="Task_PrepareNotifyApprovedGuest" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyApprovedGuest" name="Prepare approved notification (guest)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="notificationType">RESOLUTION_APPROVED</camunda:inputParameter>
-          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>R9</bpmn:incoming>
-      <bpmn:outgoing>R10</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R10" sourceRef="Task_PrepareNotifyApprovedGuest" targetRef="Task_SendNotifyApprovedGuest" />
-
-    <bpmn:serviceTask id="Task_SendNotifyApprovedGuest" name="Send approved notification (guest)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
-      <bpmn:incoming>R10</bpmn:incoming>
-      <bpmn:outgoing>R11</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R11" sourceRef="Task_SendNotifyApprovedGuest" targetRef="Task_PrepareNotifyApprovedOwner" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyApprovedOwner" name="Prepare approved notification (owner)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="notificationType">RESOLUTION_APPROVED</camunda:inputParameter>
-          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>R11</bpmn:incoming>
-      <bpmn:outgoing>R12</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R12" sourceRef="Task_PrepareNotifyApprovedOwner" targetRef="Task_SendNotifyApprovedOwner" />
-
-    <bpmn:serviceTask id="Task_SendNotifyApprovedOwner" name="Send approved notification (owner)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
-      <bpmn:incoming>R12</bpmn:incoming>
-      <bpmn:outgoing>R13</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <!-- ====== PREPARE FORM (user-pay) ====== -->
-    <bpmn:sequenceFlow id="R13" sourceRef="Task_SendNotifyApprovedOwner" targetRef="Task_PrepareResolutionForm_Pay" />
-
-    <bpmn:serviceTask id="Task_PrepareResolutionForm_Pay" name="Prepare resolution form (pay)"
-                      camunda:delegateExpression="${prepareResolutionFormDelegate}">
-      <bpmn:incoming>R13</bpmn:incoming>
-      <bpmn:outgoing>R13b</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R13b" sourceRef="Task_PrepareResolutionForm_Pay" targetRef="Task_UserPay" />
-
-    <bpmn:userTask id="Task_UserPay" name="Оплата компенсации"
-                   camunda:candidateUsers="${guestId}"
-                   camunda:formRef="resolution-pay"
-                   camunda:formRefBinding="latest">
-      <bpmn:incoming>R13b</bpmn:incoming>
-      <bpmn:outgoing>R14</bpmn:outgoing>
-    </bpmn:userTask>
-
-    <bpmn:sequenceFlow id="R14" sourceRef="Task_UserPay" targetRef="Gw_UserDecision" />
-
-    <bpmn:exclusiveGateway id="Gw_UserDecision" name="User decision?" default="R_DECLINE">
-      <bpmn:incoming>R14</bpmn:incoming>
-      <bpmn:outgoing>R_PAY</bpmn:outgoing>
-      <bpmn:outgoing>R_DECLINE</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-
-    <bpmn:sequenceFlow id="R_PAY" sourceRef="Gw_UserDecision" targetRef="Task_RegisterPayment">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
-        ${userDecision == 'PAY'}
-      </bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-
-    <bpmn:sequenceFlow id="R_DECLINE" sourceRef="Gw_UserDecision" targetRef="Task_BanUser" />
-
-    <!-- ====== PAY PATH ====== -->
-    <bpmn:serviceTask id="Task_RegisterPayment" name="Register payment"
-                      camunda:delegateExpression="${registerPaymentDelegate}">
-      <bpmn:incoming>R_PAY</bpmn:incoming>
-      <bpmn:outgoing>R15</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R15" sourceRef="Task_RegisterPayment" targetRef="Task_PrepareNotifyPaidGuest" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyPaidGuest" name="Prepare paid notification (guest)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="notificationType">RESOLUTION_PAID</camunda:inputParameter>
-          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>R15</bpmn:incoming>
-      <bpmn:outgoing>R16</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R16" sourceRef="Task_PrepareNotifyPaidGuest" targetRef="Task_SendNotifyPaidGuest" />
-
-    <bpmn:serviceTask id="Task_SendNotifyPaidGuest" name="Send paid notification (guest)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
-      <bpmn:incoming>R16</bpmn:incoming>
-      <bpmn:outgoing>R17</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R17" sourceRef="Task_SendNotifyPaidGuest" targetRef="Task_PrepareNotifyPaidOwner" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyPaidOwner" name="Prepare paid notification (owner)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="notificationType">RESOLUTION_PAID</camunda:inputParameter>
-          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>R17</bpmn:incoming>
-      <bpmn:outgoing>R18</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R18" sourceRef="Task_PrepareNotifyPaidOwner" targetRef="Task_SendNotifyPaidOwner" />
-
-    <bpmn:serviceTask id="Task_SendNotifyPaidOwner" name="Send paid notification (owner)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
-      <bpmn:incoming>R18</bpmn:incoming>
-      <bpmn:outgoing>R19</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R19" sourceRef="Task_SendNotifyPaidOwner" targetRef="End_Paid" />
-
-    <bpmn:endEvent id="End_Paid" name="Paid">
-      <bpmn:incoming>R19</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <!-- ====== DECLINE PATH ====== -->
-    <bpmn:serviceTask id="Task_BanUser" name="Ban user"
-                      camunda:delegateExpression="${banUserDelegate}">
-      <bpmn:incoming>R_DECLINE</bpmn:incoming>
-      <bpmn:outgoing>R20</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R20" sourceRef="Task_BanUser" targetRef="Task_PrepareNotifyDeclinedGuest" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyDeclinedGuest" name="Prepare declined notification (guest)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="notificationType">RESOLUTION_DECLINED</camunda:inputParameter>
-          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>R20</bpmn:incoming>
-      <bpmn:outgoing>R21</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R21" sourceRef="Task_PrepareNotifyDeclinedGuest" targetRef="Task_SendNotifyDeclinedGuest" />
-
-    <bpmn:serviceTask id="Task_SendNotifyDeclinedGuest" name="Send declined notification (guest)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
-      <bpmn:incoming>R21</bpmn:incoming>
-      <bpmn:outgoing>R22</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R22" sourceRef="Task_SendNotifyDeclinedGuest" targetRef="Task_PrepareNotifyDeclinedOwner" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyDeclinedOwner" name="Prepare declined notification (owner)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
-      <bpmn:extensionElements>
-        <camunda:inputOutput>
-          <camunda:inputParameter name="notificationType">RESOLUTION_DECLINED</camunda:inputParameter>
-          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
-        </camunda:inputOutput>
-      </bpmn:extensionElements>
-      <bpmn:incoming>R22</bpmn:incoming>
-      <bpmn:outgoing>R23</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R23" sourceRef="Task_PrepareNotifyDeclinedOwner" targetRef="Task_SendNotifyDeclinedOwner" />
-
-    <bpmn:serviceTask id="Task_SendNotifyDeclinedOwner" name="Send declined notification (owner)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
-      <bpmn:incoming>R23</bpmn:incoming>
-      <bpmn:outgoing>R24</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R24" sourceRef="Task_SendNotifyDeclinedOwner" targetRef="End_Banned" />
-
-    <bpmn:endEvent id="End_Banned" name="Banned">
-      <bpmn:incoming>R24</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <!-- ====== REJECT PATH (admin) ====== -->
-    <bpmn:serviceTask id="Task_RejectComplaint" name="Reject complaint"
-                      camunda:delegateExpression="${rejectComplaintDelegate}">
+    <bpmn:serviceTask id="Task_RejectComplaint" name="Отклонение жалобы" camunda:delegateExpression="${rejectComplaintDelegate}">
       <bpmn:incoming>R_REJECT</bpmn:incoming>
       <bpmn:outgoing>R25</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R25" sourceRef="Task_RejectComplaint" targetRef="Task_PrepareNotifyRejectedGuest" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyRejectedGuest" name="Prepare rejected notification (guest)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+    <bpmn:serviceTask id="Task_PrepareNotifyRejectedGuest" name="Подготовка уведомления об отклонении (гость)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
       <bpmn:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="notificationType">RESOLUTION_REJECTED</camunda:inputParameter>
@@ -391,19 +135,11 @@
       <bpmn:incoming>R25</bpmn:incoming>
       <bpmn:outgoing>R26</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R26" sourceRef="Task_PrepareNotifyRejectedGuest" targetRef="Task_SendNotifyRejectedGuest" />
-
-    <bpmn:serviceTask id="Task_SendNotifyRejectedGuest" name="Send rejected notification (guest)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
+    <bpmn:serviceTask id="Task_SendNotifyRejectedGuest" name="Отправка уведомления об отклонении (гость)" camunda:delegateExpression="${sendNotificationDelegate}">
       <bpmn:incoming>R26</bpmn:incoming>
       <bpmn:outgoing>R27</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R27" sourceRef="Task_SendNotifyRejectedGuest" targetRef="Task_PrepareNotifyRejectedOwner" />
-
-    <bpmn:serviceTask id="Task_PrepareNotifyRejectedOwner" name="Prepare rejected notification (owner)"
-                      camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+    <bpmn:serviceTask id="Task_PrepareNotifyRejectedOwner" name="Подготовка уведомления об отклонении (владелец)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
       <bpmn:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="notificationType">RESOLUTION_REJECTED</camunda:inputParameter>
@@ -413,20 +149,556 @@
       <bpmn:incoming>R27</bpmn:incoming>
       <bpmn:outgoing>R28</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R28" sourceRef="Task_PrepareNotifyRejectedOwner" targetRef="Task_SendNotifyRejectedOwner" />
-
-    <bpmn:serviceTask id="Task_SendNotifyRejectedOwner" name="Send rejected notification (owner)"
-                      camunda:delegateExpression="${sendNotificationDelegate}">
+    <bpmn:serviceTask id="Task_SendNotifyRejectedOwner" name="Отправка уведомления об отклонении (владелец)" camunda:delegateExpression="${sendNotificationDelegate}">
       <bpmn:incoming>R28</bpmn:incoming>
       <bpmn:outgoing>R29</bpmn:outgoing>
     </bpmn:serviceTask>
-
-    <bpmn:sequenceFlow id="R29" sourceRef="Task_SendNotifyRejectedOwner" targetRef="End_ComplaintRejected" />
-
-    <bpmn:endEvent id="End_ComplaintRejected" name="Complaint rejected">
+    <bpmn:endEvent id="End_ComplaintRejected" name="Жалоба отклонена">
       <bpmn:incoming>R29</bpmn:incoming>
     </bpmn:endEvent>
-
+    <bpmn:serviceTask id="Task_PrepareNotifyApprovedGuest" name="Подготовка уведомления об одобрении (гость)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_APPROVED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R9</bpmn:incoming>
+      <bpmn:outgoing>R10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SendNotifyApprovedGuest" name="Отправка уведомления об одобрении (гость)" camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R10</bpmn:incoming>
+      <bpmn:outgoing>R11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_PrepareNotifyApprovedOwner" name="Подготовка уведомления об одобрении (владелец)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_APPROVED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R11</bpmn:incoming>
+      <bpmn:outgoing>R12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SendNotifyApprovedOwner" name="Отправка уведомления об одобрении (владелец)" camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R12</bpmn:incoming>
+      <bpmn:outgoing>R13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_PrepareResolutionForm_Pay" name="Подготовка формы резолюции (оплата)" camunda:delegateExpression="${prepareResolutionFormDelegate}">
+      <bpmn:incoming>R13</bpmn:incoming>
+      <bpmn:outgoing>R13b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_UserPay" name="Оплата компенсации" camunda:candidateUsers="${guestId}" camunda:formRef="resolution-pay" camunda:formRefBinding="latest">
+      <bpmn:incoming>R13b</bpmn:incoming>
+      <bpmn:outgoing>R14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gw_UserDecision" name="Решение гостя?" default="R_DECLINE">
+      <bpmn:incoming>R14</bpmn:incoming>
+      <bpmn:outgoing>R_PAY</bpmn:outgoing>
+      <bpmn:outgoing>R_DECLINE</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_RegisterPayment" name="Регистрация платежа" camunda:delegateExpression="${registerPaymentDelegate}">
+      <bpmn:incoming>R_PAY</bpmn:incoming>
+      <bpmn:outgoing>R15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_PrepareNotifyPaidGuest" name="Подготовка уведомления об оплате (гость)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_PAID</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R15</bpmn:incoming>
+      <bpmn:outgoing>R16</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SendNotifyPaidGuest" name="Отправка уведомления об оплате (гость)" camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R16</bpmn:incoming>
+      <bpmn:outgoing>R17</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_PrepareNotifyPaidOwner" name="Подготовка уведомления об оплате (владелец)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_PAID</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R17</bpmn:incoming>
+      <bpmn:outgoing>R18</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SendNotifyPaidOwner" name="Отправка уведомления об оплате (владелец)" camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R18</bpmn:incoming>
+      <bpmn:outgoing>R19</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_Paid" name="Оплачено">
+      <bpmn:incoming>R19</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_BanUser" name="Блокировка пользователя" camunda:delegateExpression="${banUserDelegate}">
+      <bpmn:incoming>R_DECLINE</bpmn:incoming>
+      <bpmn:outgoing>R20</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_PrepareNotifyDeclinedGuest" name="Подготовка уведомления об отказе (гость)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_DECLINED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">GUEST</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R20</bpmn:incoming>
+      <bpmn:outgoing>R21</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SendNotifyDeclinedGuest" name="Отправка уведомления об отказе (гость)" camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R21</bpmn:incoming>
+      <bpmn:outgoing>R22</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_PrepareNotifyDeclinedOwner" name="Подготовка уведомления об отказе (владелец)" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_DECLINED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R22</bpmn:incoming>
+      <bpmn:outgoing>R23</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SendNotifyDeclinedOwner" name="Отправка уведомления об отказе (владелец)" camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R23</bpmn:incoming>
+      <bpmn:outgoing>R24</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_Banned" name="Заблокирован">
+      <bpmn:incoming>R24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_CloseWindowExpired" name="Закрытие окна (истекло)" camunda:delegateExpression="${closeResolutionWindowExpiredDelegate}">
+      <bpmn:incoming>R_TIMEOUT</bpmn:incoming>
+      <bpmn:outgoing>R_TIMEOUT2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_PrepareNotifyExpired" name="Подготовка уведомления об истечении" camunda:delegateExpression="${prepareResolutionNotificationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="notificationType">RESOLUTION_WINDOW_EXPIRED</camunda:inputParameter>
+          <camunda:inputParameter name="notificationRecipient">OWNER</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>R_TIMEOUT2</bpmn:incoming>
+      <bpmn:outgoing>R_TIMEOUT3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SendNotifyExpired" name="Отправка уведомления об истечении" camunda:delegateExpression="${sendNotificationDelegate}">
+      <bpmn:incoming>R_TIMEOUT3</bpmn:incoming>
+      <bpmn:outgoing>R_TIMEOUT4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="End_WindowExpired" name="Окно истекло">
+      <bpmn:incoming>R_TIMEOUT4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="R0" sourceRef="Start_Resolution" targetRef="Task_CreateWindow" />
+    <bpmn:sequenceFlow id="R1" sourceRef="Task_CreateWindow" targetRef="Task_PrepareNotifyWindowOpened" />
+    <bpmn:sequenceFlow id="R2" sourceRef="Task_PrepareNotifyWindowOpened" targetRef="Task_SendNotifyWindowOpened" />
+    <bpmn:sequenceFlow id="R3" sourceRef="Task_SendNotifyWindowOpened" targetRef="Task_PrepareResolutionForm_File" />
+    <bpmn:sequenceFlow id="R3b" sourceRef="Task_PrepareResolutionForm_File" targetRef="Task_OwnerFileComplaint" />
+    <bpmn:sequenceFlow id="R4" sourceRef="Task_OwnerFileComplaint" targetRef="Task_RegisterComplaint" />
+    <bpmn:sequenceFlow id="R5" sourceRef="Task_RegisterComplaint" targetRef="Task_PrepareNotifyComplaintFiled" />
+    <bpmn:sequenceFlow id="R6" sourceRef="Task_PrepareNotifyComplaintFiled" targetRef="Task_SendNotifyComplaintFiled" />
+    <bpmn:sequenceFlow id="R7" sourceRef="Task_SendNotifyComplaintFiled" targetRef="Task_PrepareResolutionForm_Admin" />
+    <bpmn:sequenceFlow id="R7b" sourceRef="Task_PrepareResolutionForm_Admin" targetRef="Task_AdminReview" />
+    <bpmn:sequenceFlow id="R8" sourceRef="Task_AdminReview" targetRef="Gw_AdminDecision" />
+    <bpmn:sequenceFlow id="R_APPROVE" name="Одобрено" sourceRef="Gw_AdminDecision" targetRef="Task_ApproveComplaint">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${adminDecision == 'APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="R_REJECT" name="Отклонено" sourceRef="Gw_AdminDecision" targetRef="Task_RejectComplaint" />
+    <bpmn:sequenceFlow id="R9" sourceRef="Task_ApproveComplaint" targetRef="Task_PrepareNotifyApprovedGuest" />
+    <bpmn:sequenceFlow id="R10" sourceRef="Task_PrepareNotifyApprovedGuest" targetRef="Task_SendNotifyApprovedGuest" />
+    <bpmn:sequenceFlow id="R11" sourceRef="Task_SendNotifyApprovedGuest" targetRef="Task_PrepareNotifyApprovedOwner" />
+    <bpmn:sequenceFlow id="R12" sourceRef="Task_PrepareNotifyApprovedOwner" targetRef="Task_SendNotifyApprovedOwner" />
+    <bpmn:sequenceFlow id="R13" sourceRef="Task_SendNotifyApprovedOwner" targetRef="Task_PrepareResolutionForm_Pay" />
+    <bpmn:sequenceFlow id="R13b" sourceRef="Task_PrepareResolutionForm_Pay" targetRef="Task_UserPay" />
+    <bpmn:sequenceFlow id="R14" sourceRef="Task_UserPay" targetRef="Gw_UserDecision" />
+    <bpmn:sequenceFlow id="R_PAY" name="Оплата" sourceRef="Gw_UserDecision" targetRef="Task_RegisterPayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${userDecision == 'PAY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="R_DECLINE" name="Отказ" sourceRef="Gw_UserDecision" targetRef="Task_BanUser" />
+    <bpmn:sequenceFlow id="R15" sourceRef="Task_RegisterPayment" targetRef="Task_PrepareNotifyPaidGuest" />
+    <bpmn:sequenceFlow id="R16" sourceRef="Task_PrepareNotifyPaidGuest" targetRef="Task_SendNotifyPaidGuest" />
+    <bpmn:sequenceFlow id="R17" sourceRef="Task_SendNotifyPaidGuest" targetRef="Task_PrepareNotifyPaidOwner" />
+    <bpmn:sequenceFlow id="R18" sourceRef="Task_PrepareNotifyPaidOwner" targetRef="Task_SendNotifyPaidOwner" />
+    <bpmn:sequenceFlow id="R19" sourceRef="Task_SendNotifyPaidOwner" targetRef="End_Paid" />
+    <bpmn:sequenceFlow id="R20" sourceRef="Task_BanUser" targetRef="Task_PrepareNotifyDeclinedGuest" />
+    <bpmn:sequenceFlow id="R21" sourceRef="Task_PrepareNotifyDeclinedGuest" targetRef="Task_SendNotifyDeclinedGuest" />
+    <bpmn:sequenceFlow id="R22" sourceRef="Task_SendNotifyDeclinedGuest" targetRef="Task_PrepareNotifyDeclinedOwner" />
+    <bpmn:sequenceFlow id="R23" sourceRef="Task_PrepareNotifyDeclinedOwner" targetRef="Task_SendNotifyDeclinedOwner" />
+    <bpmn:sequenceFlow id="R24" sourceRef="Task_SendNotifyDeclinedOwner" targetRef="End_Banned" />
+    <bpmn:sequenceFlow id="R25" sourceRef="Task_RejectComplaint" targetRef="Task_PrepareNotifyRejectedGuest" />
+    <bpmn:sequenceFlow id="R26" sourceRef="Task_PrepareNotifyRejectedGuest" targetRef="Task_SendNotifyRejectedGuest" />
+    <bpmn:sequenceFlow id="R27" sourceRef="Task_SendNotifyRejectedGuest" targetRef="Task_PrepareNotifyRejectedOwner" />
+    <bpmn:sequenceFlow id="R28" sourceRef="Task_PrepareNotifyRejectedOwner" targetRef="Task_SendNotifyRejectedOwner" />
+    <bpmn:sequenceFlow id="R29" sourceRef="Task_SendNotifyRejectedOwner" targetRef="End_ComplaintRejected" />
+    <bpmn:sequenceFlow id="R_TIMEOUT" sourceRef="Timer_WindowExpire" targetRef="Task_CloseWindowExpired" />
+    <bpmn:sequenceFlow id="R_TIMEOUT2" sourceRef="Task_CloseWindowExpired" targetRef="Task_PrepareNotifyExpired" />
+    <bpmn:sequenceFlow id="R_TIMEOUT3" sourceRef="Task_PrepareNotifyExpired" targetRef="Task_SendNotifyExpired" />
+    <bpmn:sequenceFlow id="R_TIMEOUT4" sourceRef="Task_SendNotifyExpired" targetRef="End_WindowExpired" />
+    <bpmn:boundaryEvent id="Timer_WindowExpire" name="Окно истекло" attachedToRef="Task_OwnerFileComplaint" cancelActivity="true">
+      <bpmn:outgoing>R_TIMEOUT</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0hkjh60">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT1M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
   </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collab_Resolution">
+      <bpmndi:BPMNShape id="Participant_Airbnb_di" bpmnElement="Participant_Airbnb" isHorizontal="true">
+        <dc:Bounds x="120" y="60" width="4050" height="690" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Guest_di" bpmnElement="Lane_Guest" isHorizontal="true">
+        <dc:Bounds x="150" y="634" width="4020" height="116" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Owner_di" bpmnElement="Lane_Owner" isHorizontal="true">
+        <dc:Bounds x="150" y="517" width="4020" height="117" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Admin_di" bpmnElement="Lane_Admin" isHorizontal="true">
+        <dc:Bounds x="150" y="400" width="4020" height="117" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="150" y="60" width="4020" height="340" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_Resolution_di" bpmnElement="Start_Resolution">
+        <dc:Bounds x="202" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="205" y="265" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateWindow_di" bpmnElement="Task_CreateWindow">
+        <dc:Bounds x="280" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyWindowOpened_di" bpmnElement="Task_PrepareNotifyWindowOpened">
+        <dc:Bounds x="420" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyWindowOpened_di" bpmnElement="Task_SendNotifyWindowOpened">
+        <dc:Bounds x="560" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareResolutionForm_File_di" bpmnElement="Task_PrepareResolutionForm_File">
+        <dc:Bounds x="700" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OwnerFileComplaint_di" bpmnElement="Task_OwnerFileComplaint">
+        <dc:Bounds x="700" y="535" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegisterComplaint_di" bpmnElement="Task_RegisterComplaint">
+        <dc:Bounds x="840" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyComplaintFiled_di" bpmnElement="Task_PrepareNotifyComplaintFiled">
+        <dc:Bounds x="970" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyComplaintFiled_di" bpmnElement="Task_SendNotifyComplaintFiled">
+        <dc:Bounds x="1250" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareResolutionForm_Admin_di" bpmnElement="Task_PrepareResolutionForm_Admin">
+        <dc:Bounds x="1390" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AdminReview_di" bpmnElement="Task_AdminReview">
+        <dc:Bounds x="1390" y="420" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_AdminDecision_di" bpmnElement="Gw_AdminDecision" isMarkerVisible="true">
+        <dc:Bounds x="1565" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1596" y="190" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ApproveComplaint_di" bpmnElement="Task_ApproveComplaint">
+        <dc:Bounds x="1720" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RejectComplaint_di" bpmnElement="Task_RejectComplaint">
+        <dc:Bounds x="1720" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyRejectedGuest_di" bpmnElement="Task_PrepareNotifyRejectedGuest">
+        <dc:Bounds x="1870" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyRejectedGuest_di" bpmnElement="Task_SendNotifyRejectedGuest">
+        <dc:Bounds x="2150" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyRejectedOwner_di" bpmnElement="Task_PrepareNotifyRejectedOwner">
+        <dc:Bounds x="2290" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyRejectedOwner_di" bpmnElement="Task_SendNotifyRejectedOwner">
+        <dc:Bounds x="2440" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ComplaintRejected_di" bpmnElement="End_ComplaintRejected">
+        <dc:Bounds x="2730" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2722" y="375" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyApprovedGuest_di" bpmnElement="Task_PrepareNotifyApprovedGuest">
+        <dc:Bounds x="1870" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyApprovedGuest_di" bpmnElement="Task_SendNotifyApprovedGuest">
+        <dc:Bounds x="2010" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyApprovedOwner_di" bpmnElement="Task_PrepareNotifyApprovedOwner">
+        <dc:Bounds x="2150" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyApprovedOwner_di" bpmnElement="Task_SendNotifyApprovedOwner">
+        <dc:Bounds x="2560" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareResolutionForm_Pay_di" bpmnElement="Task_PrepareResolutionForm_Pay">
+        <dc:Bounds x="2698" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UserPay_di" bpmnElement="Task_UserPay">
+        <dc:Bounds x="2870" y="645" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gw_UserDecision_di" bpmnElement="Gw_UserDecision" isMarkerVisible="true">
+        <dc:Bounds x="3055" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3039" y="191" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RegisterPayment_di" bpmnElement="Task_RegisterPayment">
+        <dc:Bounds x="3230" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyPaidGuest_di" bpmnElement="Task_PrepareNotifyPaidGuest">
+        <dc:Bounds x="3370" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyPaidGuest_di" bpmnElement="Task_SendNotifyPaidGuest">
+        <dc:Bounds x="3510" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyPaidOwner_di" bpmnElement="Task_PrepareNotifyPaidOwner">
+        <dc:Bounds x="3650" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyPaidOwner_di" bpmnElement="Task_SendNotifyPaidOwner">
+        <dc:Bounds x="3790" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Paid_di" bpmnElement="End_Paid">
+        <dc:Bounds x="3940" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3933" y="165" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_BanUser_di" bpmnElement="Task_BanUser">
+        <dc:Bounds x="3230" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyDeclinedGuest_di" bpmnElement="Task_PrepareNotifyDeclinedGuest">
+        <dc:Bounds x="3370" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyDeclinedGuest_di" bpmnElement="Task_SendNotifyDeclinedGuest">
+        <dc:Bounds x="3510" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyDeclinedOwner_di" bpmnElement="Task_PrepareNotifyDeclinedOwner">
+        <dc:Bounds x="3650" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyDeclinedOwner_di" bpmnElement="Task_SendNotifyDeclinedOwner">
+        <dc:Bounds x="3790" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Banned_di" bpmnElement="End_Banned">
+        <dc:Bounds x="3940" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3922" y="375" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CloseWindowExpired_di" bpmnElement="Task_CloseWindowExpired">
+        <dc:Bounds x="840" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrepareNotifyExpired_di" bpmnElement="Task_PrepareNotifyExpired">
+        <dc:Bounds x="970" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendNotifyExpired_di" bpmnElement="Task_SendNotifyExpired">
+        <dc:Bounds x="1110" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_WindowExpired_di" bpmnElement="End_WindowExpired">
+        <dc:Bounds x="1282" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1265" y="155" width="69" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1pryusp_di" bpmnElement="Timer_WindowExpire">
+        <dc:Bounds x="732" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="715" y="88" width="69" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="R0_di" bpmnElement="R0">
+        <di:waypoint x="238" y="240" />
+        <di:waypoint x="280" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R1_di" bpmnElement="R1">
+        <di:waypoint x="380" y="240" />
+        <di:waypoint x="420" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R2_di" bpmnElement="R2">
+        <di:waypoint x="520" y="240" />
+        <di:waypoint x="560" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R3_di" bpmnElement="R3">
+        <di:waypoint x="660" y="240" />
+        <di:waypoint x="700" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R3b_di" bpmnElement="R3b">
+        <di:waypoint x="750" y="280" />
+        <di:waypoint x="750" y="535" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R4_di" bpmnElement="R4">
+        <di:waypoint x="800" y="575" />
+        <di:waypoint x="890" y="575" />
+        <di:waypoint x="890" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R5_di" bpmnElement="R5">
+        <di:waypoint x="940" y="240" />
+        <di:waypoint x="970" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R6_di" bpmnElement="R6">
+        <di:waypoint x="1070" y="240" />
+        <di:waypoint x="1250" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R7_di" bpmnElement="R7">
+        <di:waypoint x="1350" y="240" />
+        <di:waypoint x="1390" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R7b_di" bpmnElement="R7b">
+        <di:waypoint x="1440" y="280" />
+        <di:waypoint x="1440" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R8_di" bpmnElement="R8">
+        <di:waypoint x="1490" y="460" />
+        <di:waypoint x="1590" y="460" />
+        <di:waypoint x="1590" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_APPROVE_di" bpmnElement="R_APPROVE">
+        <di:waypoint x="1615" y="240" />
+        <di:waypoint x="1680" y="240" />
+        <di:waypoint x="1680" y="140" />
+        <di:waypoint x="1720" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1700" y="199" width="52" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_REJECT_di" bpmnElement="R_REJECT">
+        <di:waypoint x="1615" y="240" />
+        <di:waypoint x="1680" y="240" />
+        <di:waypoint x="1680" y="350" />
+        <di:waypoint x="1720" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1702" y="265" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R9_di" bpmnElement="R9">
+        <di:waypoint x="1820" y="140" />
+        <di:waypoint x="1870" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R10_di" bpmnElement="R10">
+        <di:waypoint x="1970" y="140" />
+        <di:waypoint x="2010" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R11_di" bpmnElement="R11">
+        <di:waypoint x="2110" y="140" />
+        <di:waypoint x="2150" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R12_di" bpmnElement="R12">
+        <di:waypoint x="2250" y="140" />
+        <di:waypoint x="2560" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R13_di" bpmnElement="R13">
+        <di:waypoint x="2660" y="140" />
+        <di:waypoint x="2698" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R13b_di" bpmnElement="R13b">
+        <di:waypoint x="2798" y="140" />
+        <di:waypoint x="2920" y="140" />
+        <di:waypoint x="2920" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R14_di" bpmnElement="R14">
+        <di:waypoint x="2970" y="685" />
+        <di:waypoint x="3000" y="685" />
+        <di:waypoint x="3000" y="240" />
+        <di:waypoint x="3055" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_PAY_di" bpmnElement="R_PAY">
+        <di:waypoint x="3105" y="240" />
+        <di:waypoint x="3140" y="240" />
+        <di:waypoint x="3140" y="140" />
+        <di:waypoint x="3230" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3161" y="143" width="38" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_DECLINE_di" bpmnElement="R_DECLINE">
+        <di:waypoint x="3105" y="240" />
+        <di:waypoint x="3140" y="240" />
+        <di:waypoint x="3140" y="350" />
+        <di:waypoint x="3230" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3165" y="313" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R15_di" bpmnElement="R15">
+        <di:waypoint x="3330" y="140" />
+        <di:waypoint x="3370" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R16_di" bpmnElement="R16">
+        <di:waypoint x="3470" y="140" />
+        <di:waypoint x="3510" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R17_di" bpmnElement="R17">
+        <di:waypoint x="3610" y="140" />
+        <di:waypoint x="3650" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R18_di" bpmnElement="R18">
+        <di:waypoint x="3750" y="140" />
+        <di:waypoint x="3790" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R19_di" bpmnElement="R19">
+        <di:waypoint x="3890" y="140" />
+        <di:waypoint x="3940" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R20_di" bpmnElement="R20">
+        <di:waypoint x="3330" y="350" />
+        <di:waypoint x="3370" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R21_di" bpmnElement="R21">
+        <di:waypoint x="3470" y="350" />
+        <di:waypoint x="3510" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R22_di" bpmnElement="R22">
+        <di:waypoint x="3610" y="350" />
+        <di:waypoint x="3650" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R23_di" bpmnElement="R23">
+        <di:waypoint x="3750" y="350" />
+        <di:waypoint x="3790" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R24_di" bpmnElement="R24">
+        <di:waypoint x="3890" y="350" />
+        <di:waypoint x="3940" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R25_di" bpmnElement="R25">
+        <di:waypoint x="1820" y="350" />
+        <di:waypoint x="1870" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R26_di" bpmnElement="R26">
+        <di:waypoint x="1970" y="350" />
+        <di:waypoint x="2150" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R27_di" bpmnElement="R27">
+        <di:waypoint x="2250" y="350" />
+        <di:waypoint x="2290" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R28_di" bpmnElement="R28">
+        <di:waypoint x="2390" y="350" />
+        <di:waypoint x="2440" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R29_di" bpmnElement="R29">
+        <di:waypoint x="2540" y="350" />
+        <di:waypoint x="2730" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_TIMEOUT_di" bpmnElement="R_TIMEOUT">
+        <di:waypoint x="768" y="130" />
+        <di:waypoint x="840" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_TIMEOUT2_di" bpmnElement="R_TIMEOUT2">
+        <di:waypoint x="940" y="130" />
+        <di:waypoint x="970" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_TIMEOUT3_di" bpmnElement="R_TIMEOUT3">
+        <di:waypoint x="1070" y="130" />
+        <di:waypoint x="1110" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="R_TIMEOUT4_di" bpmnElement="R_TIMEOUT4">
+        <di:waypoint x="1210" y="130" />
+        <di:waypoint x="1282" y="130" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
 </bpmn:definitions>

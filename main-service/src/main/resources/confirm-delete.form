@@ -40,8 +40,7 @@
       "type": "checkbox",
       "label": "Подтверждаю удаление",
       "id": "Field_confirm",
-      "key": "confirmDelete",
-      "validate": { "required": true }
+      "key": "confirmDelete"
     }
   ],
   "type": "default"

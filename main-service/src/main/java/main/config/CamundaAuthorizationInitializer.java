@@ -10,8 +10,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @Order(10)
@@ -19,15 +21,13 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(CamundaAuthorizationInitializer.class);
 
-    /**
-     * Какие процессы видны и стартуемы для каждой группы.
-     * Camunda объединяет права по всем группам пользователя (union).
-     */
     private static final Map<String, List<String>> PROCESSES_BY_GROUP = Map.of(
-            "USER", List.of("booking-lifecycle"),
-            "OWNER", List.of("listing-create", "listing-update", "listing-delete"),
-            "ADMIN", List.of("listing-create", "listing-update", "listing-delete", "booking-lifecycle")
+            "USER", List.of("booking-lifecycle", "resolution-lifecycle"),
+            "OWNER", List.of("listing-create", "listing-update", "listing-delete", "resolution-lifecycle"),
+            "ADMIN", List.of("listing-create", "listing-update", "listing-delete", "booking-lifecycle", "resolution-lifecycle")
     );
+
+    private static final Set<String> READONLY_PROCESSES = Set.of("resolution-lifecycle");
 
     private final AuthorizationService authorizationService;
 
@@ -40,6 +40,7 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
         log.info("Initializing Camunda authorizations...");
 
         removeLegacyWildcardAuthorizations();
+        cleanupResolutionLifecycleAuthorizations();   // ← чтобы не осталось старых CREATE_INSTANCE
 
         for (String group : new String[]{"USER", "OWNER", "ADMIN"}) {
             grantTaskPermissions(group);
@@ -49,7 +50,6 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
             grantGroupMembershipPermission(group);
         }
 
-        // BANNED — всем всё запрещаем через REVOKE
         revokeAllForBanned();
 
         log.info("Camunda authorizations initialized.");
@@ -77,16 +77,21 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
                 });
     }
 
-    // ──────────────────────── BANNED ────────────────────────
+    private void cleanupResolutionLifecycleAuthorizations() {
+        authorizationService.createAuthorizationQuery()
+                .resourceType(Resources.PROCESS_DEFINITION)
+                .resourceId("resolution-lifecycle")
+                .list()
+                .forEach(a -> {
+                    authorizationService.deleteAuthorization(a.getId());
+                    log.info("[CLEANUP] Removed old PROCESS_DEFINITION auth id={} group={}",
+                            a.getId(), a.getGroupId());
+                });
+    }
 
-    /**
-     * REVOKE для группы BANNED на все ключевые ресурсы.
-     * REVOKE в Camunda перебивает любой GRANT, даже если юзер в других группах.
-     */
     private void revokeAllForBanned() {
         String group = "BANNED";
 
-        // 1. Process Definition — запретить видеть и стартовать ЛЮБЫЕ процессы
         revoke(group, Resources.PROCESS_DEFINITION, "*", new Permissions[]{
                 Permissions.READ,
                 Permissions.CREATE_INSTANCE,
@@ -94,7 +99,6 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
                 Permissions.DELETE
         });
 
-        // 2. Process Instance — запретить работать с инстансами
         revoke(group, Resources.PROCESS_INSTANCE, "*", new Permissions[]{
                 Permissions.CREATE,
                 Permissions.READ,
@@ -102,7 +106,6 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
                 Permissions.DELETE
         });
 
-        // 3. Task — запретить видеть и брать задачи
         revoke(group, Resources.TASK, "*", new Permissions[]{
                 Permissions.READ,
                 Permissions.UPDATE,
@@ -110,7 +113,6 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
                 Permissions.TASK_WORK
         });
 
-        // 4. Application — запретить вход в Cockpit/Tasklist/Admin
         for (String app : new String[]{"cockpit", "tasklist", "admin", "welcome"}) {
             revoke(group, Resources.APPLICATION, app, new Permissions[]{Permissions.ACCESS});
         }
@@ -119,7 +121,6 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
     }
 
     private void revoke(String group, Resources resource, String resourceId, Permissions[] permissions) {
-        // удаляем прошлые REVOKE для этой группы+ресурса+id, чтобы не плодить дубли
         authorizationService.createAuthorizationQuery()
                 .groupIdIn(group)
                 .resourceType(resource)
@@ -138,8 +139,6 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
 
         log.info("[BANNED] Revoked {} on {}:{}", permissions.length, resource.resourceName(), resourceId);
     }
-
-    // ──────────────────────── GRANT (USER/OWNER/ADMIN) ────────────────────────
 
     private void grantTaskPermissions(String group) {
         authorizationService.createAuthorizationQuery()
@@ -166,19 +165,21 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
         List<String> processes = PROCESSES_BY_GROUP.get(group);
         if (processes == null) return;
 
-        Permissions[] perms = new Permissions[]{
-                Permissions.READ,
-                Permissions.CREATE_INSTANCE
-        };
-
         for (String processKey : processes) {
+            boolean readOnly = READONLY_PROCESSES.contains(processKey);
+
+            Permissions[] perms = readOnly
+                    ? new Permissions[]{Permissions.READ}
+                    : new Permissions[]{Permissions.READ, Permissions.CREATE_INSTANCE};
+
             boolean exists = authorizationService.createAuthorizationQuery()
                     .groupIdIn(group)
                     .resourceType(Resources.PROCESS_DEFINITION)
                     .resourceId(processKey)
                     .count() > 0;
             if (exists) {
-                log.debug("[PROCESS_DEFINITION] {} already authorized for group {}", processKey, group);
+                log.debug("[PROCESS_DEFINITION] {} already authorized for group {} (readOnly={})",
+                        processKey, group, readOnly);
                 continue;
             }
 
@@ -188,7 +189,8 @@ public class CamundaAuthorizationInitializer implements CommandLineRunner {
             auth.setResourceId(processKey);
             auth.setPermissions(perms);
             authorizationService.saveAuthorization(auth);
-            log.info("[PROCESS_DEFINITION] Granted {} [READ, CREATE_INSTANCE] to group {}", processKey, group);
+            log.info("[PROCESS_DEFINITION] Granted {} to group {} for {}",
+                    Arrays.toString(perms), group, processKey);
         }
     }
 
